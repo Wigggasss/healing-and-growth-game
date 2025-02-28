@@ -68,9 +68,14 @@ class Game {
         
         // Mouse controls
         document.addEventListener('mousemove', (e) => {
-            this.mousePosition.x = (e.clientX / window.innerWidth) * 2 - 1;
-            this.mousePosition.y = -(e.clientY / window.innerHeight) * 2 + 1;
-            this.rotatePlayer();
+            if (document.pointerLockElement === this.renderer.domElement) {
+                this.player.rotation.y -= e.movementX * 0.002;
+                this.camera.rotation.x = THREE.MathUtils.clamp(
+                    this.camera.rotation.x - e.movementY * 0.002,
+                    -Math.PI / 3,
+                    Math.PI / 3
+                );
+            }
         });
 
         // Lock pointer for better mouse control
@@ -378,17 +383,6 @@ class Game {
         // Keep player within bounds
         this.player.position.x = THREE.MathUtils.clamp(this.player.position.x, -40, 40);
         this.player.position.z = THREE.MathUtils.clamp(this.player.position.z, -40, 40);
-    }
-
-    rotatePlayer() {
-        if (document.pointerLockElement === this.renderer.domElement) {
-            this.player.rotation.y -= event.movementX * 0.002;
-            this.camera.rotation.x = THREE.MathUtils.clamp(
-                this.camera.rotation.x - event.movementY * 0.002,
-                -Math.PI / 3,
-                Math.PI / 3
-            );
-        }
     }
 
     updateCamera() {
