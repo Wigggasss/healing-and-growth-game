@@ -1,6 +1,4 @@
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
-
+// Remove imports and use global THREE object
 class Game {
     constructor() {
         this.initialize();
@@ -80,7 +78,9 @@ class Game {
 
         // Lock pointer for better mouse control
         this.renderer.domElement.addEventListener('click', () => {
-            this.renderer.domElement.requestPointerLock();
+            if (document.pointerLockElement !== this.renderer.domElement) {
+                this.renderer.domElement.requestPointerLock();
+            }
         });
     }
 
