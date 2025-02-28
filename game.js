@@ -1,46 +1,52 @@
-import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
-import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
 
 class Game {
     constructor() {
-        // Hide loading screen once the game starts
-        document.getElementById('loading').style.display = 'none';
         this.initialize();
     }
 
     initialize() {
-        // Create scene
-        this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x87ceeb); // Sky blue background
-        
-        // Create camera
-        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.camera.position.set(0, 5, 10);
-        
-        // Create renderer
-        this.renderer = new THREE.WebGLRenderer({ antialias: true });
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        document.body.appendChild(this.renderer.domElement);
-        
-        // Add lights
-        this.addLights();
-        
-        // Add basic ground
-        this.addGround();
+        try {
+            // Create scene
+            this.scene = new THREE.Scene();
+            this.scene.background = new THREE.Color(0x87ceeb); // Sky blue background
+            
+            // Create camera
+            this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            this.camera.position.set(0, 5, 10);
+            
+            // Create renderer
+            this.renderer = new THREE.WebGLRenderer({ antialias: true });
+            this.renderer.setSize(window.innerWidth, window.innerHeight);
+            this.renderer.shadowMap.enabled = true;
+            this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.body.appendChild(this.renderer.domElement);
+            
+            // Add lights
+            this.addLights();
+            
+            // Add basic ground
+            this.addGround();
 
-        // Add some trees
-        this.addTrees();
+            // Add some trees
+            this.addTrees();
 
-        // Add player
-        this.addPlayer();
-        
-        // Handle window resize
-        window.addEventListener('resize', () => this.onWindowResize(), false);
-        
-        // Start animation loop
-        this.animate();
+            // Add player
+            this.addPlayer();
+            
+            // Handle window resize
+            window.addEventListener('resize', () => this.onWindowResize(), false);
+            
+            // Hide loading screen once everything is ready
+            document.getElementById('loading').style.display = 'none';
+            
+            // Start animation loop
+            this.animate();
+        } catch (error) {
+            console.error('Error initializing game:', error);
+            document.getElementById('loading').textContent = 'Error loading game. Please refresh the page.';
+        }
     }
 
     addLights() {
@@ -121,7 +127,7 @@ class Game {
     }
 
     setupCameraControls() {
-        // Remove orbit controls
+        // Remove orbit controls if they exist
         if (this.controls) {
             this.controls.dispose();
         }
@@ -164,6 +170,8 @@ class Game {
     }
 
     updateCamera() {
+        if (!this.cameraTarget || !this.player) return;
+
         // Update camera target position
         this.cameraTarget.position.lerp(
             new THREE.Vector3(
@@ -203,5 +211,12 @@ class Game {
     }
 }
 
-// Start the game
-const game = new Game(); 
+// Start the game when the page is fully loaded
+window.addEventListener('load', () => {
+    try {
+        const game = new Game();
+    } catch (error) {
+        console.error('Error starting game:', error);
+        document.getElementById('loading').textContent = 'Error loading game. Please refresh the page.';
+    }
+}); 
