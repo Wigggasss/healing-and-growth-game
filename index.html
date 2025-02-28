@@ -4,20 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Healing & Growth Game</title>
-    <!-- Include Three.js from CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
     <style>
         body {
             margin: 0;
             overflow: hidden;
-            background-color: #000;
-            width: 100%;
-            height: 100vh;
         }
         canvas {
             display: block;
-            width: 100% !important;
-            height: 100% !important;
         }
         #ui-container {
             position: fixed;
@@ -26,7 +19,6 @@
             color: white;
             font-family: Arial, sans-serif;
             pointer-events: none;
-            z-index: 1000;
         }
         #health-bar {
             width: 200px;
@@ -42,60 +34,14 @@
             background: #2ecc71;
             transition: width 0.3s;
         }
-        #loading {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            font-family: Arial, sans-serif;
-            font-size: 24px;
-            z-index: 2000;
-            text-align: center;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 20px;
-            border-radius: 10px;
-        }
-        #instructions {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: white;
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 10px;
-            border-radius: 5px;
-            z-index: 1000;
-        }
-        .error {
-            color: #ff4444;
-        }
     </style>
 </head>
 <body>
-    <div id="loading">
-        Loading game...
-        <div id="error" class="error" style="display: none; margin-top: 10px; font-size: 16px;"></div>
-    </div>
     <div id="ui-container">
         <div id="health-bar">
             <div id="health-fill"></div>
         </div>
     </div>
-    <div id="instructions">
-        Use WASD to move • Space to jump • Mouse to look around
-    </div>
-    <script>
-        window.onerror = function(msg, url, line) {
-            const errorDiv = document.getElementById('error');
-            errorDiv.style.display = 'block';
-            errorDiv.textContent = 'Error loading game. Please try refreshing the page.';
-            console.error('Error:', msg, 'at', url, ':', line);
-            return false;
-        };
-    </script>
-    <script src="game.js"></script>
+    <script type="module" src="js/main.js"></script>
 </body>
 </html> 
