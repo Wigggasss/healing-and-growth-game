@@ -1,4 +1,4 @@
-// Remove imports and use global THREE object
+// Game class definition
 class Game {
     constructor() {
         this.initialize();
@@ -125,15 +125,15 @@ class Game {
         // Create player group
         this.player = new THREE.Group();
         
-        // Create player body
-        const bodyGeometry = new THREE.CapsuleGeometry(0.5, 1, 4, 8);
+        // Create player body (using cylinder instead of capsule since it's more widely supported)
+        const bodyGeometry = new THREE.CylinderGeometry(0.5, 0.5, 2, 8);
         const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
         const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
         body.position.y = 1.5;
         body.castShadow = true;
         
         // Create player head
-        const headGeometry = new THREE.SphereGeometry(0.3, 16, 16);
+        const headGeometry = new THREE.SphereGeometry(0.5, 16, 16);
         const headMaterial = new THREE.MeshStandardMaterial({ color: 0xffccaa });
         const head = new THREE.Mesh(headGeometry, headMaterial);
         head.position.y = 2.5;
@@ -216,15 +216,15 @@ class Game {
         for (let i = 0; i < 5; i++) {
             const npc = new THREE.Group();
             
-            // NPC body
-            const bodyGeometry = new THREE.CapsuleGeometry(0.5, 1, 4, 8);
+            // NPC body (using cylinder instead of capsule)
+            const bodyGeometry = new THREE.CylinderGeometry(0.5, 0.5, 2, 8);
             const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
             const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
             body.position.y = 1.5;
             body.castShadow = true;
             
             // NPC head
-            const headGeometry = new THREE.SphereGeometry(0.3, 16, 16);
+            const headGeometry = new THREE.SphereGeometry(0.5, 16, 16);
             const headMaterial = new THREE.MeshStandardMaterial({ color: 0xffccaa });
             const head = new THREE.Mesh(headGeometry, headMaterial);
             head.position.y = 2.5;
