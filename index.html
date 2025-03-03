@@ -159,6 +159,29 @@
             color: white;
             z-index: 1000;
         }
+        #inventory-items {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .inventory-slot {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .inventory-slot:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
         #quest-log {
             position: fixed;
             bottom: 20px;
@@ -170,6 +193,24 @@
             color: white;
             z-index: 1000;
             max-width: 300px;
+        }
+        .quest-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+        .quest-item h4 {
+            margin: 0 0 5px 0;
+            color: #3498db;
+        }
+        .quest-item p {
+            margin: 0 0 5px 0;
+            font-size: 14px;
+        }
+        .quest-progress {
+            font-size: 12px;
+            color: #95a5a6;
         }
         #skills {
             position: fixed;
@@ -183,6 +224,20 @@
             color: white;
             z-index: 1000;
         }
+        .skill-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+        }
+        .skill-item h4 {
+            margin: 0 0 5px 0;
+            color: #3498db;
+        }
+        .skill-item p {
+            margin: 0 0 5px 0;
+            font-size: 14px;
+        }
         .skill-bar {
             width: 150px;
             height: 10px;
@@ -195,6 +250,22 @@
             height: 100%;
             background: linear-gradient(90deg, #3498db, #2980b9);
             transition: width 0.3s;
+        }
+        .skill-item button {
+            background: #3498db;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .skill-item button:hover {
+            background: #2980b9;
+        }
+        .skill-item button:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
         }
         #weather {
             position: fixed;
@@ -242,6 +313,8 @@
         <div id="error" class="error" style="display: none; margin-top: 10px; font-size: 16px;"></div>
     </div>
     <div id="level-up">Level Up!</div>
+    
+    <!-- Main UI Container -->
     <div id="ui-container">
         <div id="level-display">Level 1</div>
         <div class="status-label">Health</div>
@@ -256,51 +329,56 @@
         <div class="status-bar">
             <div id="experience-fill"></div>
         </div>
-        <div class="status-label">Growth Progress</div>
-        <div class="status-bar">    
+        <div class="status-label">Progress</div>
+        <div class="status-bar">
             <div id="progress-fill"></div>
         </div>
     </div>
+
+    <!-- Weather and Time Display -->
+    <div id="weather">Sunny</div>
+    <div id="time">00:00</div>
+
+    <!-- Inventory -->
     <div id="inventory">
         <h3>Inventory</h3>
         <div id="inventory-items"></div>
     </div>
+
+    <!-- Quest Log -->
     <div id="quest-log">
-        <h3>Active Quests</h3>
+        <h3>Quests</h3>
         <div id="quest-list"></div>
     </div>
+
+    <!-- Skills Panel -->
     <div id="skills">
         <h3>Skills</h3>
-        <div class="skill-bar">
-            <div class="skill-fill" style="width: 50%"></div>
-        </div>
-        <div class="skill-bar">
-            <div class="skill-fill" style="width: 30%"></div>
-        </div>
-        <div class="skill-bar">
-            <div class="skill-fill" style="width: 70%"></div>
-        </div>
     </div>
-    <div id="weather">Sunny</div>
-    <div id="time">12:00</div>
-    <div id="fps">60 FPS</div>
+
+    <!-- FPS Counter -->
+    <div id="fps">FPS: 60</div>
+
+    <!-- Instructions -->
     <div id="instructions">
-        <p>Welcome to your journey of healing and growth!</p>
-        <p>WASD to move • Space to jump • Mouse to look around • ESC to unlock mouse</p>
-        <p>Find healing zones (green) to restore health and meditation spots (purple) to gain energy and experience</p>
-        <p>Collect items and complete quests to level up and become stronger</p>
-        <p>Press I to open inventory • Press Q to view quests • Press K to view skills</p>
+        <p>WASD - Move</p>
+        <p>Space - Jump</p>
+        <p>Mouse - Look around</p>
+        <p>Click to start</p>
     </div>
+
+    <!-- Game Script -->
     <script type="module">
         import { Game } from './game.js';
         
-        // Wait for window to load before creating game instance
+        // Create game instance when window loads
         window.addEventListener('load', () => {
             try {
                 window.game = new Game();
             } catch (error) {
                 console.error('Error creating game:', error);
-                document.getElementById('loading').textContent = 'Error loading game. Please refresh the page.';
+                document.getElementById('error').textContent = 'Error creating game. Please refresh the page.';
+                document.getElementById('error').style.display = 'block';
             }
         });
     </script>
