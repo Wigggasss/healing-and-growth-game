@@ -981,7 +981,7 @@ class VegetationSystem {
 }
 
 // Game class definition
-class Game {
+export class Game {
     constructor() {
         try {
             // Initialize all arrays and collections first
@@ -1760,15 +1760,4 @@ class Game {
         // Render scene
         this.renderer.render(this.scene, this.camera);
     }
-}
-
-// Start the game when the page is fully loaded
-window.addEventListener('load', () => {
-    try {
-        // Create global game instance
-        window.game = new Game();
-    } catch (error) {
-        console.error('Error starting game:', error);
-        document.getElementById('loading').textContent = 'Error loading game. Please refresh the page.';
-    }
-}); 
+} 
