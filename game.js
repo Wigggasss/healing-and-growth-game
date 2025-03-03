@@ -7,7 +7,7 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { VignetteShader } from 'three/addons/shaders/VignetteShader.js';
 
 // Game Systems
-class WeatherSystem {
+export class WeatherSystem {
     constructor() {
         this.weatherTypes = ['sunny', 'rainy', 'cloudy', 'stormy', 'foggy'];
         this.currentWeather = 'sunny';
@@ -120,7 +120,7 @@ class WeatherSystem {
     }
 }
 
-class DayNightCycle {
+export class DayNightCycle {
     constructor() {
         this.time = 0;
         this.dayLength = 300; // 5 minutes per day
@@ -215,7 +215,7 @@ class DayNightCycle {
     }
 }
 
-class Inventory {
+export class Inventory {
     constructor() {
         this.items = [];
         this.maxItems = 20;
@@ -301,7 +301,7 @@ class Inventory {
     }
 }
 
-class QuestSystem {
+export class QuestSystem {
     constructor() {
         this.quests = [];
         this.activeQuests = [];
@@ -409,7 +409,7 @@ class QuestSystem {
     }
 }
 
-class SkillSystem {
+export class SkillSystem {
     constructor() {
         this.skills = [];
         this.skillPoints = 0;
@@ -492,7 +492,7 @@ class SkillSystem {
     }
 }
 
-class EffectSystem {
+export class EffectSystem {
     constructor() {
         this.effects = [];
         this.particleSystems = [];
@@ -608,7 +608,7 @@ class EffectSystem {
     }
 }
 
-class SoundSystem {
+export class SoundSystem {
     constructor() {
         this.sounds = {};
         this.music = null;
@@ -669,7 +669,7 @@ class SoundSystem {
     }
 }
 
-class AnimationSystem {
+export class AnimationSystem {
     constructor() {
         this.animations = new Map();
         this.currentAnimation = null;
@@ -756,7 +756,7 @@ class AnimationSystem {
     }
 }
 
-class CollisionSystem {
+export class CollisionSystem {
     constructor() {
         this.colliders = new Map();
     }
@@ -805,7 +805,7 @@ class CollisionSystem {
     }
 }
 
-class PathfindingSystem {
+export class PathfindingSystem {
     constructor() {
         this.grid = [];
         this.paths = new Map();
@@ -843,7 +843,7 @@ class PathfindingSystem {
     }
 }
 
-class TerrainSystem {
+export class TerrainSystem {
     constructor() {
         this.terrain = null;
         this.heightMap = null;
@@ -899,7 +899,7 @@ class TerrainSystem {
     }
 }
 
-class VegetationSystem {
+export class VegetationSystem {
     constructor() {
         this.plants = [];
         this.trees = [];
