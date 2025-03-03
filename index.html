@@ -50,6 +50,12 @@
             background: #9b59b6;
             transition: width 0.3s;
         }
+        #experience-fill {
+            width: 0%;
+            height: 100%;
+            background: #3498db;
+            transition: width 0.3s;
+        }
         #progress-fill {
             width: 0%;
             height: 100%;
@@ -60,6 +66,13 @@
             font-size: 14px;
             margin-bottom: 5px;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+        }
+        #level-display {
+            font-size: 18px;
+            font-weight: bold;
+            color: #3498db;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            margin-bottom: 10px;
         }
         #loading {
             position: fixed;
@@ -92,6 +105,22 @@
         .error {
             color: #ff4444;
         }
+        #level-up {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #3498db;
+            font-family: Arial, sans-serif;
+            font-size: 36px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            z-index: 2000;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -99,7 +128,9 @@
         Loading game...
         <div id="error" class="error" style="display: none; margin-top: 10px; font-size: 16px;"></div>
     </div>
+    <div id="level-up">Level Up!</div>
     <div id="ui-container">
+        <div id="level-display">Level 1</div>
         <div class="status-label">Health</div>
         <div class="status-bar">
             <div id="health-fill"></div>
@@ -107,6 +138,10 @@
         <div class="status-label">Energy</div>
         <div class="status-bar">
             <div id="energy-fill"></div>
+        </div>
+        <div class="status-label">Experience</div>
+        <div class="status-bar">
+            <div id="experience-fill"></div>
         </div>
         <div class="status-label">Growth Progress</div>
         <div class="status-bar">    
@@ -116,7 +151,8 @@
     <div id="instructions">
         <p>Welcome to your journey of healing and growth!</p>
         <p>WASD to move • Space to jump • Mouse to look around • ESC to unlock mouse</p>
-        <p>Find healing zones (green) to restore health and meditation spots (purple) to gain energy and progress</p>
+        <p>Find healing zones (green) to restore health and meditation spots (purple) to gain energy and experience</p>
+        <p>Level up to become stronger and more peaceful</p>
     </div>
     <script>
         window.onerror = function(msg, url, line) {
