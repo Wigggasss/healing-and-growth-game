@@ -1038,39 +1038,67 @@ export class Game {
             // Initialize texture loader
             this.textureLoader = new THREE.TextureLoader();
             
-            // Load textures
-            this.textures = {
-                grass: this.textureLoader.load('https://threejs.org/examples/textures/terrain/grasslight-big.jpg'),
-                dirt: this.textureLoader.load('https://threejs.org/examples/textures/terrain/dirt.jpg'),
-                rock: this.textureLoader.load('https://threejs.org/examples/textures/terrain/rock.jpg'),
-                flower: this.textureLoader.load('https://threejs.org/examples/textures/flowers/flower1.jpg'),
-                healing: this.textureLoader.load('https://threejs.org/examples/textures/terrain/grasslight-big.jpg'),
-                meditation: this.textureLoader.load('https://threejs.org/examples/textures/terrain/rock.jpg')
+            // Load textures with error handling
+            this.textures = {};
+            const textureUrls = {
+                grass: 'https://threejs.org/examples/textures/terrain/grasslight-big.jpg',
+                dirt: 'https://threejs.org/examples/textures/terrain/dirt.jpg',
+                rock: 'https://threejs.org/examples/textures/terrain/rock.jpg',
+                flower: 'https://threejs.org/examples/textures/flowers/flower1.jpg',
+                healing: 'https://threejs.org/examples/textures/terrain/grasslight-big.jpg',
+                meditation: 'https://threejs.org/examples/textures/terrain/rock.jpg'
             };
 
-            // Set up inputs
-            this.setupInputs();
-            
-            // Add game elements
-            this.addLights();
-            this.addGround();
-            this.addFlowers();
-            this.addMeditationSpots();
-            this.addHealingZones();
-            this.addNPCs();
-            this.addPlayer();
-            
-            // Handle window resize
-            window.addEventListener('resize', () => this.onWindowResize(), false);
-            
-            // Initialize all game systems
-            this.initializeSystems();
-            
-            // Hide loading screen
-            document.getElementById('loading').style.display = 'none';
-            
-            // Start animation loop
-            this.animate();
+            // Load textures with promises
+            const texturePromises = Object.entries(textureUrls).map(([key, url]) => {
+                return new Promise((resolve, reject) => {
+                    this.textureLoader.load(
+                        url,
+                        (texture) => {
+                            this.textures[key] = texture;
+                            resolve();
+                        },
+                        undefined,
+                        (error) => {
+                            console.error(`Error loading texture ${key}:`, error);
+                            reject(error);
+                        }
+                    );
+                });
+            });
+
+            // Wait for all textures to load before proceeding
+            Promise.all(texturePromises)
+                .then(() => {
+                    // Set up inputs
+                    this.setupInputs();
+                    
+                    // Add game elements
+                    this.addLights();
+                    this.addGround();
+                    this.addFlowers();
+                    this.addMeditationSpots();
+                    this.addHealingZones();
+                    this.addNPCs();
+                    this.addPlayer();
+                    
+                    // Handle window resize
+                    window.addEventListener('resize', () => this.onWindowResize(), false);
+                    
+                    // Initialize all game systems
+                    this.initializeSystems();
+                    
+                    // Hide loading screen
+                    document.getElementById('loading').style.display = 'none';
+                    
+                    // Start animation loop
+                    this.animate();
+                })
+                .catch(error => {
+                    console.error('Error loading textures:', error);
+                    document.getElementById('loading').textContent = 'Error loading game textures. Please refresh the page.';
+                });
+
         } catch (error) {
             console.error('Error in Game constructor:', error);
             document.getElementById('loading').textContent = 'Error loading game. Please refresh the page.';
@@ -1079,42 +1107,38 @@ export class Game {
 
     initializeSystems() {
         try {
-            // Initialize all game systems
+            // Initialize all game systems in the correct order
             this.weather = new WeatherSystem();
-            this.weather.initialize(this.scene);
-
             this.dayNightCycle = new DayNightCycle();
-            this.dayNightCycle.initialize(this.scene);
-
             this.inventory = new Inventory();
-            this.inventory.initialize();
-
             this.quests = new QuestSystem();
-            this.quests.initialize();
-
             this.skills = new SkillSystem();
-            this.skills.initialize();
-
             this.effects = new EffectSystem();
-            this.effects.initialize(this.scene);
-
             this.sounds = new SoundSystem();
-            this.sounds.initialize();
-
             this.animations = new AnimationSystem();
-            this.animations.initialize();
-
             this.collisions = new CollisionSystem();
-            this.collisions.initialize();
-
             this.pathfinding = new PathfindingSystem();
-            this.pathfinding.initialize();
-
             this.terrain = new TerrainSystem();
-            this.terrain.initialize(this.scene);
-
             this.vegetation = new VegetationSystem();
+
+            // Initialize each system
+            this.weather.initialize(this.scene);
+            this.dayNightCycle.initialize(this.scene);
+            this.inventory.initialize();
+            this.quests.initialize();
+            this.skills.initialize();
+            this.effects.initialize(this.scene);
+            this.sounds.initialize();
+            this.animations.initialize();
+            this.collisions.initialize();
+            this.pathfinding.initialize();
+            this.terrain.initialize(this.scene);
             this.vegetation.initialize(this.scene);
+
+            // Start background music
+            if (this.sounds) {
+                this.sounds.playMusic();
+            }
         } catch (error) {
             console.error('Error initializing game systems:', error);
             throw error;
