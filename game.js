@@ -1920,6 +1920,5 @@ export {
     CollisionSystem,
     PathfindingSystem,
     TerrainSystem,
-    VegetationSystem,
     Game
 }; 
