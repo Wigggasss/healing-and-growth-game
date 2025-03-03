@@ -1038,9 +1038,6 @@ class Game {
             // Initialize texture loader
             this.textureLoader = new THREE.TextureLoader();
 
-            // Initialize all game systems
-            this.initializeSystems();
-
             // Set up inputs
             this.setupInputs();
             
@@ -1055,6 +1052,9 @@ class Game {
             
             // Handle window resize
             window.addEventListener('resize', () => this.onWindowResize(), false);
+            
+            // Initialize all game systems
+            this.initializeSystems();
             
             // Hide loading screen
             document.getElementById('loading').style.display = 'none';
