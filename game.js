@@ -14,6 +14,10 @@ class Game {
         this.meditationTime = 0;
         this.isMeditating = false;
         this.flowers = [];
+        this.level = 1;
+        this.experience = 0;
+        this.maxExperience = 100;
+        this.achievements = [];
     }
 
     initialize() {
@@ -109,13 +113,14 @@ class Game {
     }
 
     addGround() {
-        // Create a more natural-looking ground
+        // Create a more natural-looking ground with better textures
         const groundGeometry = new THREE.PlaneGeometry(100, 100, 50, 50);
         const groundMaterial = new THREE.MeshStandardMaterial({ 
             color: 0x3a7e4f,
             roughness: 0.8,
             metalness: 0.2,
-            wireframe: false
+            wireframe: false,
+            flatShading: true
         });
         
         // Add more natural terrain variation
@@ -124,10 +129,16 @@ class Game {
             if (i !== 0) {
                 const x = vertices[i];
                 const z = vertices[i + 2];
-                // Create gentle hills using sine waves
-                vertices[i + 1] = Math.sin(x * 0.1) * 0.5 + Math.cos(z * 0.1) * 0.5;
+                // Create more interesting terrain using multiple sine waves
+                vertices[i + 1] = 
+                    Math.sin(x * 0.1) * 0.5 + 
+                    Math.cos(z * 0.1) * 0.5 +
+                    Math.sin((x + z) * 0.05) * 0.3;
             }
         }
+        
+        // Update normals for better lighting
+        groundGeometry.computeVertexNormals();
         
         this.ground = new THREE.Mesh(groundGeometry, groundMaterial);
         this.ground.rotation.x = -Math.PI / 2;
@@ -208,23 +219,47 @@ class Game {
         // Create player group
         this.player = new THREE.Group();
         
-        // Create player body (using cylinder instead of capsule since it's more widely supported)
-        const bodyGeometry = new THREE.CylinderGeometry(0.5, 0.5, 2, 8);
-        const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+        // Create player body with better materials
+        const bodyGeometry = new THREE.CylinderGeometry(0.5, 0.5, 2, 12);
+        const bodyMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x4CAF50,
+            roughness: 0.5,
+            metalness: 0.2,
+            emissive: 0x2E7D32,
+            emissiveIntensity: 0.2
+        });
         const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
         body.position.y = 1.5;
         body.castShadow = true;
         
-        // Create player head
+        // Create player head with better materials
         const headGeometry = new THREE.SphereGeometry(0.5, 16, 16);
-        const headMaterial = new THREE.MeshStandardMaterial({ color: 0xffccaa });
+        const headMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0xFFE0B2,
+            roughness: 0.3,
+            metalness: 0.1
+        });
         const head = new THREE.Mesh(headGeometry, headMaterial);
         head.position.y = 2.5;
         head.castShadow = true;
 
-        // Add body and head to player group
+        // Add aura effect
+        const auraGeometry = new THREE.SphereGeometry(1.2, 16, 16);
+        const auraMaterial = new THREE.MeshStandardMaterial({
+            color: 0x4CAF50,
+            transparent: true,
+            opacity: 0.2,
+            emissive: 0x4CAF50,
+            emissiveIntensity: 0.5
+        });
+        const aura = new THREE.Mesh(auraGeometry, auraMaterial);
+        aura.position.y = 2;
+        this.player.aura = aura;
+
+        // Add body, head, and aura to player group
         this.player.add(body);
         this.player.add(head);
+        this.player.add(aura);
         
         // Position player
         this.player.position.set(0, 0, 0);
@@ -387,9 +422,9 @@ class Game {
         cameraDirection.normalize();
         
         const sideDirection = new THREE.Vector3(
-            -cameraDirection.z, // Fixed A/D movement by inverting the direction
+            cameraDirection.z, // Fixed A/D movement
             0,
-            cameraDirection.x
+            -cameraDirection.x
         );
         
         // Create a new vector for each movement to prevent accumulation
@@ -430,6 +465,12 @@ class Game {
         // Keep player within bounds
         this.player.position.x = THREE.MathUtils.clamp(this.player.position.x, -40, 40);
         this.player.position.z = THREE.MathUtils.clamp(this.player.position.z, -40, 40);
+
+        // Update aura effect
+        if (this.player.aura) {
+            this.player.aura.material.opacity = 0.2 + Math.sin(Date.now() * 0.003) * 0.1;
+            this.player.aura.material.emissiveIntensity = 0.5 + Math.sin(Date.now() * 0.003) * 0.2;
+        }
     }
 
     updateCamera() {
@@ -560,6 +601,7 @@ class Game {
                 this.heal(0.1);
                 this.increaseEnergy(0.2);
                 this.healingProgress += 0.005;
+                this.addExperience(0.1);
                 
                 // Update UI
                 document.querySelector('#progress-fill').style.width = 
@@ -577,6 +619,58 @@ class Game {
     increaseEnergy(amount) {
         this.energy = Math.min(100, this.energy + amount);
         document.querySelector('#energy-fill').style.width = this.energy + '%';
+    }
+
+    addExperience(amount) {
+        this.experience += amount;
+        if (this.experience >= this.maxExperience) {
+            this.levelUp();
+        }
+        // Update experience bar
+        document.querySelector('#experience-fill').style.width = 
+            (this.experience / this.maxExperience * 100) + '%';
+    }
+
+    levelUp() {
+        this.level++;
+        this.experience = 0;
+        this.maxExperience *= 1.5;
+        this.heal(50);
+        this.increaseEnergy(50);
+        
+        // Show level up effect
+        this.showLevelUpEffect();
+    }
+
+    showLevelUpEffect() {
+        // Create a burst of particles
+        const particles = new THREE.Group();
+        for (let i = 0; i < 20; i++) {
+            const particle = new THREE.Mesh(
+                new THREE.SphereGeometry(0.1, 8, 8),
+                new THREE.MeshBasicMaterial({ 
+                    color: 0x4CAF50,
+                    transparent: true,
+                    opacity: 0.8
+                })
+            );
+            
+            const angle = Math.random() * Math.PI * 2;
+            const radius = Math.random() * 2;
+            particle.position.set(
+                Math.cos(angle) * radius,
+                Math.random() * 2,
+                Math.sin(angle) * radius
+            );
+            particles.add(particle);
+        }
+        
+        this.player.add(particles);
+        
+        // Animate and remove particles
+        setTimeout(() => {
+            this.player.remove(particles);
+        }, 1000);
     }
 
     animate() {
