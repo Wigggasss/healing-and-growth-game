@@ -292,11 +292,25 @@
         <p>Press I to open inventory • Press Q to view quests • Press K to view skills</p>
     </div>
     <script type="module">
-        // Import the Game class
-        import { Game } from './game.js';
-        
-        // Wait for Three.js to be available
+        // First import Three.js
         import * as THREE from 'three';
+        
+        // Then import the Game class and all its dependencies
+        import { 
+            Game,
+            WeatherSystem,
+            DayNightCycle,
+            Inventory,
+            QuestSystem,
+            SkillSystem,
+            EffectSystem,
+            SoundSystem,
+            AnimationSystem,
+            CollisionSystem,
+            PathfindingSystem,
+            TerrainSystem,
+            VegetationSystem
+        } from './game.js';
         
         // Create global game instance
         window.addEventListener('load', () => {
