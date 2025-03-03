@@ -7,7 +7,7 @@ class Game {
         this.energy = 100;
         this.isJumping = false;
         this.velocity = new THREE.Vector3();
-        this.moveSpeed = 0.1;
+        this.moveSpeed = 0.15;
         this.jumpForce = 0.3;
         this.gravity = 0.01;
         this.healingProgress = 0;
@@ -18,6 +18,7 @@ class Game {
         this.experience = 0;
         this.maxExperience = 100;
         this.achievements = [];
+        this.textureLoader = new THREE.TextureLoader();
     }
 
     initialize() {
@@ -95,11 +96,11 @@ class Game {
 
     addLights() {
         // Ambient light
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
         this.scene.add(ambientLight);
         
         // Directional light (sun)
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
         directionalLight.position.set(5, 5, 5);
         directionalLight.castShadow = true;
         directionalLight.shadow.mapSize.width = 2048;
@@ -107,9 +108,14 @@ class Game {
         this.scene.add(directionalLight);
 
         // Add a gentle point light for better atmosphere
-        const pointLight = new THREE.PointLight(0xffffff, 0.5, 50);
+        const pointLight = new THREE.PointLight(0xffffff, 0.8, 50);
         pointLight.position.set(0, 10, 0);
         this.scene.add(pointLight);
+
+        // Add hemisphere light for better color balance
+        const hemisphereLight = new THREE.HemisphereLight(0x87ceeb, 0x3a7e4f, 0.5);
+        hemisphereLight.position.set(0, 20, 0);
+        this.scene.add(hemisphereLight);
     }
 
     addGround() {
@@ -151,21 +157,27 @@ class Game {
         for (let i = 0; i < 50; i++) {
             const flower = new THREE.Group();
             
-            // Stem
+            // Stem with better material
             const stem = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.05, 0.05, 0.5, 8),
-                new THREE.MeshStandardMaterial({ color: 0x2ecc71 })
+                new THREE.CylinderGeometry(0.05, 0.05, 0.5, 12),
+                new THREE.MeshStandardMaterial({ 
+                    color: 0x2ecc71,
+                    roughness: 0.7,
+                    metalness: 0.1
+                })
             );
             
-            // Petals
+            // Petals with better materials
             const petals = new THREE.Group();
             for (let j = 0; j < 6; j++) {
                 const petal = new THREE.Mesh(
-                    new THREE.SphereGeometry(0.1, 8, 8),
+                    new THREE.SphereGeometry(0.1, 12, 12),
                     new THREE.MeshStandardMaterial({ 
                         color: 0xff69b4,
                         emissive: 0xff1493,
-                        emissiveIntensity: 0.2
+                        emissiveIntensity: 0.3,
+                        roughness: 0.4,
+                        metalness: 0.1
                     })
                 );
                 const angle = (j / 6) * Math.PI * 2;
@@ -220,7 +232,7 @@ class Game {
         this.player = new THREE.Group();
         
         // Create player body with better materials
-        const bodyGeometry = new THREE.CylinderGeometry(0.5, 0.5, 2, 12);
+        const bodyGeometry = new THREE.CylinderGeometry(0.5, 0.5, 2, 16);
         const bodyMaterial = new THREE.MeshStandardMaterial({ 
             color: 0x4CAF50,
             roughness: 0.5,
@@ -422,9 +434,9 @@ class Game {
         cameraDirection.normalize();
         
         const sideDirection = new THREE.Vector3(
-            cameraDirection.z, // Fixed A/D movement
+            -cameraDirection.z, // Fixed A/D movement
             0,
-            -cameraDirection.x
+            cameraDirection.x
         );
         
         // Create a new vector for each movement to prevent accumulation
@@ -638,8 +650,18 @@ class Game {
         this.heal(50);
         this.increaseEnergy(50);
         
+        // Update level display
+        document.getElementById('level-display').textContent = `Level ${this.level}`;
+        
         // Show level up effect
         this.showLevelUpEffect();
+        
+        // Show level up text
+        const levelUpText = document.getElementById('level-up');
+        levelUpText.style.opacity = '1';
+        setTimeout(() => {
+            levelUpText.style.opacity = '0';
+        }, 2000);
     }
 
     showLevelUpEffect() {
