@@ -975,47 +975,30 @@ class VegetationSystem {
 // Game class definition
 class Game {
     constructor() {
-        this.initialize();
-        this.setupInputs();
-        this.health = 100;
-        this.energy = 100;
-        this.isJumping = false;
-        this.velocity = new THREE.Vector3();
-        this.moveSpeed = 0.15;
-        this.jumpForce = 0.3;
-        this.gravity = 0.01;
-        this.healingProgress = 0;
-        this.meditationTime = 0;
-        this.isMeditating = false;
-        this.flowers = [];
-        this.level = 1;
-        this.experience = 0;
-        this.maxExperience = 100;
-        this.achievements = [];
-        this.textureLoader = new THREE.TextureLoader();
-        this.particles = [];
-        this.weather = new WeatherSystem();
-        this.dayNightCycle = new DayNightCycle();
-        this.inventory = new Inventory();
-        this.quests = new QuestSystem();
-        this.skills = new SkillSystem();
-        this.effects = new EffectSystem();
-        this.sounds = new SoundSystem();
-        this.animations = new AnimationSystem();
-        this.collisions = new CollisionSystem();
-        this.pathfinding = new PathfindingSystem();
-        this.terrain = new TerrainSystem();
-        this.vegetation = new VegetationSystem();
-        this.time = 0;
-        this.gameState = 'playing';
-        this.lastUpdate = Date.now();
-        this.fps = 60;
-        this.frameTime = 1000 / this.fps;
-    }
-
-    initialize() {
         try {
-            // Create scene with a calming sky color
+            // Initialize basic properties
+            this.health = 100;
+            this.energy = 100;
+            this.isJumping = false;
+            this.velocity = new THREE.Vector3();
+            this.moveSpeed = 0.15;
+            this.jumpForce = 0.3;
+            this.gravity = 0.01;
+            this.healingProgress = 0;
+            this.meditationTime = 0;
+            this.isMeditating = false;
+            this.flowers = [];
+            this.level = 1;
+            this.experience = 0;
+            this.maxExperience = 100;
+            this.achievements = [];
+            this.time = 0;
+            this.gameState = 'playing';
+            this.lastUpdate = Date.now();
+            this.fps = 60;
+            this.frameTime = 1000 / this.fps;
+
+            // Create scene first
             this.scene = new THREE.Scene();
             this.scene.background = new THREE.Color(0xb8e6ff);
             
@@ -1023,7 +1006,7 @@ class Game {
             this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             this.camera.position.set(0, 5, 10);
             
-            // Create renderer with better quality
+            // Create renderer
             this.renderer = new THREE.WebGLRenderer({ 
                 antialias: true,
                 alpha: true
@@ -1032,11 +1015,18 @@ class Game {
             this.renderer.shadowMap.enabled = true;
             this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
             document.body.appendChild(this.renderer.domElement);
+
+            // Initialize texture loader
+            this.textureLoader = new THREE.TextureLoader();
+
+            // Initialize all game systems
+            this.initializeSystems();
+
+            // Set up inputs
+            this.setupInputs();
             
-            // Add lights
+            // Add game elements
             this.addLights();
-            
-            // Add environment
             this.addGround();
             this.addFlowers();
             this.addMeditationSpots();
@@ -1053,8 +1043,52 @@ class Game {
             // Start animation loop
             this.animate();
         } catch (error) {
-            console.error('Error initializing game:', error);
+            console.error('Error in Game constructor:', error);
             document.getElementById('loading').textContent = 'Error loading game. Please refresh the page.';
+        }
+    }
+
+    initializeSystems() {
+        try {
+            // Initialize all game systems
+            this.weather = new WeatherSystem();
+            this.weather.initialize(this.scene);
+
+            this.dayNightCycle = new DayNightCycle();
+            this.dayNightCycle.initialize(this.scene);
+
+            this.inventory = new Inventory();
+            this.inventory.initialize();
+
+            this.quests = new QuestSystem();
+            this.quests.initialize();
+
+            this.skills = new SkillSystem();
+            this.skills.initialize();
+
+            this.effects = new EffectSystem();
+            this.effects.initialize(this.scene);
+
+            this.sounds = new SoundSystem();
+            this.sounds.initialize();
+
+            this.animations = new AnimationSystem();
+            this.animations.initialize();
+
+            this.collisions = new CollisionSystem();
+            this.collisions.initialize();
+
+            this.pathfinding = new PathfindingSystem();
+            this.pathfinding.initialize();
+
+            this.terrain = new TerrainSystem();
+            this.terrain.initialize(this.scene);
+
+            this.vegetation = new VegetationSystem();
+            this.vegetation.initialize(this.scene);
+        } catch (error) {
+            console.error('Error initializing game systems:', error);
+            throw error;
         }
     }
 
@@ -1712,7 +1746,8 @@ class Game {
 // Start the game when the page is fully loaded
 window.addEventListener('load', () => {
     try {
-        const game = new Game();
+        // Create global game instance
+        window.game = new Game();
     } catch (error) {
         console.error('Error starting game:', error);
         document.getElementById('loading').textContent = 'Error loading game. Please refresh the page.';
