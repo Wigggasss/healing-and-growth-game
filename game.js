@@ -6,23 +6,6 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { VignetteShader } from 'three/addons/shaders/VignetteShader.js';
 
-// Export all systems
-export {
-    WeatherSystem,
-    DayNightCycle,
-    Inventory,
-    QuestSystem,
-    SkillSystem,
-    EffectSystem,
-    SoundSystem,
-    AnimationSystem,
-    CollisionSystem,
-    PathfindingSystem,
-    TerrainSystem,
-    VegetationSystem,
-    Game
-};
-
 // Game Systems
 export class WeatherSystem {
     constructor() {
@@ -1922,4 +1905,21 @@ export class Game {
         // Render scene
         this.renderer.render(this.scene, this.camera);
     }
-} 
+}
+
+// Export all systems at the end of the file
+export {
+    WeatherSystem,
+    DayNightCycle,
+    Inventory,
+    QuestSystem,
+    SkillSystem,
+    EffectSystem,
+    SoundSystem,
+    AnimationSystem,
+    CollisionSystem,
+    PathfindingSystem,
+    TerrainSystem,
+    VegetationSystem,
+    Game
+}; 
