@@ -1037,6 +1037,16 @@ export class Game {
 
             // Initialize texture loader
             this.textureLoader = new THREE.TextureLoader();
+            
+            // Load textures
+            this.textures = {
+                grass: this.textureLoader.load('https://threejs.org/examples/textures/terrain/grasslight-big.jpg'),
+                dirt: this.textureLoader.load('https://threejs.org/examples/textures/terrain/dirt.jpg'),
+                rock: this.textureLoader.load('https://threejs.org/examples/textures/terrain/rock.jpg'),
+                flower: this.textureLoader.load('https://threejs.org/examples/textures/flowers/flower1.jpg'),
+                healing: this.textureLoader.load('https://threejs.org/examples/textures/terrain/grasslight-big.jpg'),
+                meditation: this.textureLoader.load('https://threejs.org/examples/textures/terrain/rock.jpg')
+            };
 
             // Set up inputs
             this.setupInputs();
@@ -1166,8 +1176,12 @@ export class Game {
     addGround() {
         // Create a more natural-looking ground with better textures
         const groundGeometry = new THREE.PlaneGeometry(100, 100, 50, 50);
+        
+        // Create a material with multiple textures
         const groundMaterial = new THREE.MeshStandardMaterial({ 
-            color: 0x3a7e4f,
+            map: this.textures.grass,
+            normalMap: this.textures.grass,
+            normalScale: new THREE.Vector2(1, 1),
             roughness: 0.8,
             metalness: 0.2,
             wireframe: false,
@@ -1212,13 +1226,13 @@ export class Game {
                 })
             );
             
-            // Petals with better materials
+            // Petals with texture
             const petals = new THREE.Group();
             for (let j = 0; j < 6; j++) {
                 const petal = new THREE.Mesh(
                     new THREE.SphereGeometry(0.1, 12, 12),
                     new THREE.MeshStandardMaterial({ 
-                        color: 0xff69b4,
+                        map: this.textures.flower,
                         emissive: 0xff1493,
                         emissiveIntensity: 0.3,
                         roughness: 0.4,
@@ -1269,6 +1283,29 @@ export class Game {
             
             // Gentle swaying animation
             flower.rotation.y = Math.sin(Date.now() * 0.001 + flower.position.x) * 0.1;
+            
+            // Check if player is near flower
+            const distance = this.player.position.distanceTo(flower.position);
+            if (distance < 1) {
+                // Collect flower
+                this.heal(5);
+                this.increaseEnergy(5);
+                this.addExperience(10);
+                
+                // Play collect sound
+                if (this.sounds) {
+                    this.sounds.play('collect');
+                }
+                
+                // Remove flower
+                this.scene.remove(flower);
+                this.flowers = this.flowers.filter(f => f !== flower);
+                
+                // Update quest progress
+                if (this.quests) {
+                    this.quests.updateQuestProgress('collect_flowers');
+                }
+            }
         });
     }
 
@@ -1340,9 +1377,12 @@ export class Game {
         for (let i = 0; i < 5; i++) {
             const zoneGeometry = new THREE.CylinderGeometry(2, 2, 0.1, 32);
             const zoneMaterial = new THREE.MeshStandardMaterial({
+                map: this.textures.healing,
                 color: 0x00ff00,
                 transparent: true,
-                opacity: 0.3
+                opacity: 0.3,
+                emissive: 0x00ff00,
+                emissiveIntensity: 0.5
             });
             
             const zone = new THREE.Mesh(zoneGeometry, zoneMaterial);
@@ -1437,6 +1477,17 @@ export class Game {
             const distance = playerPos.distanceTo(zone.position);
             if (distance < 2) {
                 this.heal(0.1);
+                this.healingProgress += 0.005;
+                this.addExperience(0.05);
+                
+                // Update UI
+                document.querySelector('#progress-fill').style.width = 
+                    (this.healingProgress * 100) + '%';
+                
+                // Visual feedback
+                zone.material.emissiveIntensity = 0.8;
+            } else {
+                zone.material.emissiveIntensity = 0.5;
             }
         });
     }
@@ -1462,8 +1513,22 @@ export class Game {
     }
 
     heal(amount) {
-        this.health = Math.min(100, this.health + amount);
+        const healingEffect = amount * (1 + this.skills.getSkillEffect('Healing')?.healingMultiplier || 1);
+        this.health = Math.min(100, this.health + healingEffect);
         document.querySelector('#health-fill').style.width = this.health + '%';
+        
+        // Show healing effect
+        if (this.effects) {
+            this.effects.showHealingEffect(this.player.position);
+        }
+        
+        // Play healing sound
+        if (this.sounds) {
+            this.sounds.play('heal');
+        }
+        
+        // Add experience for healing
+        this.addExperience(amount * 0.1);
     }
 
     damage(amount) {
@@ -1562,6 +1627,7 @@ export class Game {
             const platform = new THREE.Mesh(
                 new THREE.CylinderGeometry(3, 3, 0.2, 32),
                 new THREE.MeshStandardMaterial({ 
+                    map: this.textures.meditation,
                     color: 0xe6ccff,
                     transparent: true,
                     opacity: 0.6,
@@ -1657,7 +1723,7 @@ export class Game {
                 this.meditationTime += 0.01;
                 this.heal(0.1);
                 this.increaseEnergy(0.2);
-                this.healingProgress += 0.005;
+                this.healingProgress += 0.01;
                 this.addExperience(0.1);
                 
                 // Update UI
@@ -1674,15 +1740,30 @@ export class Game {
     }
 
     increaseEnergy(amount) {
-        this.energy = Math.min(100, this.energy + amount);
+        const energyEffect = amount * (1 + this.skills.getSkillEffect('Energy')?.energyMultiplier || 1);
+        this.energy = Math.min(100, this.energy + energyEffect);
         document.querySelector('#energy-fill').style.width = this.energy + '%';
+        
+        // Show energy effect
+        if (this.effects) {
+            this.effects.showEnergyEffect(this.player.position);
+        }
+        
+        // Play energy sound
+        if (this.sounds) {
+            this.sounds.play('energy');
+        }
     }
 
     addExperience(amount) {
-        this.experience += amount;
+        const experienceEffect = amount * (1 + this.skills.getSkillEffect('Growth')?.experienceMultiplier || 1);
+        this.experience += experienceEffect;
+        
+        // Level up check
         if (this.experience >= this.maxExperience) {
             this.levelUp();
         }
+        
         // Update experience bar
         document.querySelector('#experience-fill').style.width = 
             (this.experience / this.maxExperience * 100) + '%';
@@ -1692,14 +1773,26 @@ export class Game {
         this.level++;
         this.experience = 0;
         this.maxExperience *= 1.5;
+        
+        // Heal and restore energy on level up
         this.heal(50);
         this.increaseEnergy(50);
+        
+        // Add skill point
+        this.skills.skillPoints++;
         
         // Update level display
         document.getElementById('level-display').textContent = `Level ${this.level}`;
         
         // Show level up effect
-        this.showLevelUpEffect();
+        if (this.effects) {
+            this.effects.showLevelUpEffect(this.player.position);
+        }
+        
+        // Play level up sound
+        if (this.sounds) {
+            this.sounds.play('levelUp');
+        }
         
         // Show level up text
         const levelUpText = document.getElementById('level-up');
@@ -1707,37 +1800,6 @@ export class Game {
         setTimeout(() => {
             levelUpText.style.opacity = '0';
         }, 2000);
-    }
-
-    showLevelUpEffect() {
-        // Create a burst of particles
-        const particles = new THREE.Group();
-        for (let i = 0; i < 20; i++) {
-            const particle = new THREE.Mesh(
-                new THREE.SphereGeometry(0.1, 8, 8),
-                new THREE.MeshBasicMaterial({ 
-                    color: 0x4CAF50,
-                    transparent: true,
-                    opacity: 0.8
-                })
-            );
-            
-            const angle = Math.random() * Math.PI * 2;
-            const radius = Math.random() * 2;
-            particle.position.set(
-                Math.cos(angle) * radius,
-                Math.random() * 2,
-                Math.sin(angle) * radius
-            );
-            particles.add(particle);
-        }
-        
-        this.player.add(particles);
-        
-        // Animate and remove particles
-        setTimeout(() => {
-            this.player.remove(particles);
-        }, 1000);
     }
 
     animate() {
