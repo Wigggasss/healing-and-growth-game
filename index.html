@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Healing & Growth Game</title>
     <!-- Include Three.js and additional libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/examples/js/controls/OrbitControls.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/examples/js/postprocessing/EffectComposer.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/examples/js/postprocessing/RenderPass.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/examples/js/postprocessing/UnrealBloomPass.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/examples/js/postprocessing/ShaderPass.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/examples/js/shaders/VignetteShader.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js" onerror="handleScriptError(this)"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/examples/js/controls/OrbitControls.min.js" onerror="handleScriptError(this)"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/examples/js/postprocessing/EffectComposer.min.js" onerror="handleScriptError(this)"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/examples/js/postprocessing/RenderPass.min.js" onerror="handleScriptError(this)"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/examples/js/postprocessing/UnrealBloomPass.min.js" onerror="handleScriptError(this)"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/examples/js/postprocessing/ShaderPass.min.js" onerror="handleScriptError(this)"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/examples/js/shaders/VignetteShader.min.js" onerror="handleScriptError(this)"></script>
     <style>
         body {
             margin: 0;
@@ -291,6 +291,13 @@
         <p>Press I to open inventory • Press Q to view quests • Press K to view skills</p>
     </div>
     <script>
+        function handleScriptError(script) {
+            console.error('Error loading script:', script.src);
+            const errorDiv = document.getElementById('error');
+            errorDiv.style.display = 'block';
+            errorDiv.textContent = 'Error loading required scripts. Please check your internet connection and refresh the page.';
+        }
+
         window.onerror = function(msg, url, line) {
             const errorDiv = document.getElementById('error');
             errorDiv.style.display = 'block';
@@ -298,7 +305,26 @@
             console.error('Error:', msg, 'at', url, ':', line);
             return false;
         };
+
+        // Wait for all scripts to load before starting the game
+        window.addEventListener('load', () => {
+            if (typeof THREE === 'undefined') {
+                const errorDiv = document.getElementById('error');
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = 'Three.js failed to load. Please check your internet connection and refresh the page.';
+                return;
+            }
+            
+            // Load game script
+            const gameScript = document.createElement('script');
+            gameScript.src = 'game.js';
+            gameScript.onerror = () => {
+                const errorDiv = document.getElementById('error');
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = 'Error loading game script. Please refresh the page.';
+            };
+            document.body.appendChild(gameScript);
+        });
     </script>
-    <script src="game.js"></script>
 </body>
 </html> 
