@@ -4,9 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Healing & Growth Game</title>
-    <!-- Include Three.js and OrbitControls from CDN -->
+    <!-- Include Three.js and additional libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/examples/js/controls/OrbitControls.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/examples/js/postprocessing/EffectComposer.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/examples/js/postprocessing/RenderPass.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/examples/js/postprocessing/UnrealBloomPass.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/examples/js/postprocessing/ShaderPass.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/examples/js/shaders/VignetteShader.min.js"></script>
     <style>
         body {
             margin: 0;
@@ -142,6 +147,92 @@
             backdrop-filter: blur(5px);
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
+        #inventory {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+            color: white;
+            z-index: 1000;
+        }
+        #quest-log {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+            color: white;
+            z-index: 1000;
+            max-width: 300px;
+        }
+        #skills {
+            position: fixed;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+            color: white;
+            z-index: 1000;
+        }
+        .skill-bar {
+            width: 150px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            margin: 5px 0;
+            overflow: hidden;
+        }
+        .skill-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2980b9);
+            transition: width 0.3s;
+        }
+        #weather {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+            color: white;
+            z-index: 1000;
+            font-size: 18px;
+        }
+        #time {
+            position: fixed;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+            color: white;
+            z-index: 1000;
+            font-size: 18px;
+        }
+        #fps {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 5px 10px;
+            border-radius: 5px;
+            backdrop-filter: blur(5px);
+            color: white;
+            z-index: 1000;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -169,11 +260,35 @@
             <div id="progress-fill"></div>
         </div>
     </div>
+    <div id="inventory">
+        <h3>Inventory</h3>
+        <div id="inventory-items"></div>
+    </div>
+    <div id="quest-log">
+        <h3>Active Quests</h3>
+        <div id="quest-list"></div>
+    </div>
+    <div id="skills">
+        <h3>Skills</h3>
+        <div class="skill-bar">
+            <div class="skill-fill" style="width: 50%"></div>
+        </div>
+        <div class="skill-bar">
+            <div class="skill-fill" style="width: 30%"></div>
+        </div>
+        <div class="skill-bar">
+            <div class="skill-fill" style="width: 70%"></div>
+        </div>
+    </div>
+    <div id="weather">Sunny</div>
+    <div id="time">12:00</div>
+    <div id="fps">60 FPS</div>
     <div id="instructions">
         <p>Welcome to your journey of healing and growth!</p>
         <p>WASD to move • Space to jump • Mouse to look around • ESC to unlock mouse</p>
         <p>Find healing zones (green) to restore health and meditation spots (purple) to gain energy and experience</p>
-        <p>Level up to become stronger and more peaceful</p>
+        <p>Collect items and complete quests to level up and become stronger</p>
+        <p>Press I to open inventory • Press Q to view quests • Press K to view skills</p>
     </div>
     <script>
         window.onerror = function(msg, url, line) {
