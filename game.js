@@ -1121,21 +1121,80 @@ export class Game {
             this.terrain = new TerrainSystem();
             this.vegetation = new VegetationSystem();
 
-            // Initialize each system
-            this.weather.initialize(this.scene);
-            this.dayNightCycle.initialize(this.scene);
-            this.inventory.initialize();
-            this.quests.initialize();
-            this.skills.initialize();
-            this.effects.initialize(this.scene);
-            this.sounds.initialize();
-            this.animations.initialize();
-            this.collisions.initialize();
-            this.pathfinding.initialize();
-            this.terrain.initialize(this.scene);
-            this.vegetation.initialize(this.scene);
+            // Initialize each system with proper error handling
+            try {
+                this.weather.initialize(this.scene);
+            } catch (error) {
+                console.error('Error initializing weather system:', error);
+            }
 
-            // Start background music
+            try {
+                this.dayNightCycle.initialize(this.scene);
+            } catch (error) {
+                console.error('Error initializing day/night cycle:', error);
+            }
+
+            try {
+                this.inventory.initialize();
+            } catch (error) {
+                console.error('Error initializing inventory:', error);
+            }
+
+            try {
+                this.quests.initialize();
+            } catch (error) {
+                console.error('Error initializing quests:', error);
+            }
+
+            try {
+                this.skills.initialize();
+            } catch (error) {
+                console.error('Error initializing skills:', error);
+            }
+
+            try {
+                this.effects.initialize(this.scene);
+            } catch (error) {
+                console.error('Error initializing effects:', error);
+            }
+
+            try {
+                this.sounds.initialize();
+            } catch (error) {
+                console.error('Error initializing sounds:', error);
+            }
+
+            try {
+                this.animations.initialize();
+            } catch (error) {
+                console.error('Error initializing animations:', error);
+            }
+
+            try {
+                this.collisions.initialize();
+            } catch (error) {
+                console.error('Error initializing collisions:', error);
+            }
+
+            try {
+                this.pathfinding.initialize();
+            } catch (error) {
+                console.error('Error initializing pathfinding:', error);
+            }
+
+            try {
+                this.terrain.initialize(this.scene);
+            } catch (error) {
+                console.error('Error initializing terrain:', error);
+            }
+
+            try {
+                this.vegetation.initialize(this.scene);
+            } catch (error) {
+                console.error('Error initializing vegetation:', error);
+            }
+
+            // Start background music after all systems are initialized
             if (this.sounds) {
                 this.sounds.playMusic();
             }
