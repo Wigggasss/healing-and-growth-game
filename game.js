@@ -1907,7 +1907,7 @@ class Game {
     }
 }
 
-// Export all systems at the end of the file
+// Export all systems at the end
 export {
     WeatherSystem,
     DayNightCycle,
@@ -1920,6 +1920,5 @@ export {
     CollisionSystem,
     PathfindingSystem,
     TerrainSystem,
-    VegetationSystem,
     Game
 }; 
