@@ -1041,12 +1041,12 @@ class Game {
             // Load textures with error handling
             this.textures = {};
             const textureUrls = {
-                grass: 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/textures/terrain/grasslight-big.jpg',
-                dirt: 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/textures/terrain/dirt.jpg',
-                rock: 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/textures/terrain/rock.jpg',
-                flower: 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/textures/flowers/flower1.jpg',
-                healing: 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/textures/terrain/grasslight-big.jpg',
-                meditation: 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/textures/terrain/rock.jpg'
+                grass: 'https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/grass_ground_1k.jpg',
+                dirt: 'https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/dirt_ground_1k.jpg',
+                rock: 'https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rock_ground_1k.jpg',
+                flower: 'https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/flowers_ground_1k.jpg',
+                healing: 'https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/grass_ground_1k.jpg',
+                meditation: 'https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rock_ground_1k.jpg'
             };
 
             // Load textures with promises
