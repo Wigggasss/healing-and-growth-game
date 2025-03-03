@@ -29,19 +29,37 @@
             pointer-events: none;
             z-index: 1000;
         }
-        #health-bar {
+        .status-bar {
             width: 200px;
             height: 20px;
             background: rgba(0, 0, 0, 0.5);
             border: 2px solid white;
             border-radius: 10px;
             overflow: hidden;
+            margin-bottom: 10px;
         }
         #health-fill {
             width: 100%;
             height: 100%;
             background: #2ecc71;
             transition: width 0.3s;
+        }
+        #energy-fill {
+            width: 100%;
+            height: 100%;
+            background: #9b59b6;
+            transition: width 0.3s;
+        }
+        #progress-fill {
+            width: 0%;
+            height: 100%;
+            background: #f1c40f;
+            transition: width 0.3s;
+        }
+        .status-label {
+            font-size: 14px;
+            margin-bottom: 5px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
         }
         #loading {
             position: fixed;
@@ -66,9 +84,10 @@
             font-family: Arial, sans-serif;
             text-align: center;
             background: rgba(0, 0, 0, 0.5);
-            padding: 10px;
+            padding: 15px;
             border-radius: 5px;
             z-index: 1000;
+            max-width: 80%;
         }
         .error {
             color: #ff4444;
@@ -81,12 +100,23 @@
         <div id="error" class="error" style="display: none; margin-top: 10px; font-size: 16px;"></div>
     </div>
     <div id="ui-container">
-        <div id="health-bar">
+        <div class="status-label">Health</div>
+        <div class="status-bar">
             <div id="health-fill"></div>
+        </div>
+        <div class="status-label">Energy</div>
+        <div class="status-bar">
+            <div id="energy-fill"></div>
+        </div>
+        <div class="status-label">Growth Progress</div>
+        <div class="status-bar">    
+            <div id="progress-fill"></div>
         </div>
     </div>
     <div id="instructions">
-        Click to start • WASD to move • Space to jump • Mouse to look around • ESC to unlock mouse
+        <p>Welcome to your journey of healing and growth!</p>
+        <p>WASD to move • Space to jump • Mouse to look around • ESC to unlock mouse</p>
+        <p>Find healing zones (green) to restore health and meditation spots (purple) to gain energy and progress</p>
     </div>
     <script>
         window.onerror = function(msg, url, line) {
