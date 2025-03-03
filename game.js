@@ -4,18 +4,20 @@ class Game {
         this.initialize();
         this.setupInputs();
         this.health = 100;
+        this.energy = 100; // Added energy system for growth mechanics
         this.isJumping = false;
         this.velocity = new THREE.Vector3();
         this.moveSpeed = 0.1;
         this.jumpForce = 0.3;
         this.gravity = 0.01;
+        this.healingProgress = 0; // Track overall healing progress
     }
 
     initialize() {
         try {
-            // Create scene
+            // Create scene with a calming sky color
             this.scene = new THREE.Scene();
-            this.scene.background = new THREE.Color(0x87ceeb); // Sky blue background
+            this.scene.background = new THREE.Color(0xb8e6ff); // Lighter, more peaceful sky blue
             
             // Create camera
             this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -37,6 +39,7 @@ class Game {
             // Add environment
             this.addTrees();
             this.addHealingZones();
+            this.addMeditationSpots(); // New peaceful areas
             this.addNPCs();
 
             // Add player
@@ -344,23 +347,27 @@ class Game {
         cameraDirection.normalize();
         
         const sideDirection = new THREE.Vector3(
-            cameraDirection.z,
+            -cameraDirection.z, // Fixed A/D movement by inverting the direction
             0,
-            -cameraDirection.x
+            cameraDirection.x
         );
         
-        // Apply movement based on key presses
+        // Create a new vector for each movement to prevent accumulation
         if (this.keys['w']) {
-            this.player.position.add(cameraDirection.multiplyScalar(this.moveSpeed));
+            const forward = cameraDirection.clone().multiplyScalar(this.moveSpeed);
+            this.player.position.add(forward);
         }
         if (this.keys['s']) {
-            this.player.position.add(cameraDirection.multiplyScalar(-this.moveSpeed));
+            const backward = cameraDirection.clone().multiplyScalar(-this.moveSpeed);
+            this.player.position.add(backward);
         }
         if (this.keys['a']) {
-            this.player.position.add(sideDirection.multiplyScalar(-this.moveSpeed));
+            const left = sideDirection.clone().multiplyScalar(-this.moveSpeed);
+            this.player.position.add(left);
         }
         if (this.keys['d']) {
-            this.player.position.add(sideDirection.multiplyScalar(this.moveSpeed));
+            const right = sideDirection.clone().multiplyScalar(this.moveSpeed);
+            this.player.position.add(right);
         }
         
         // Handle jumping
@@ -407,6 +414,86 @@ class Game {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
+    addMeditationSpots() {
+        this.meditationSpots = [];
+        
+        // Create peaceful meditation areas
+        for (let i = 0; i < 3; i++) {
+            const spot = new THREE.Group();
+            
+            // Create a peaceful circle platform
+            const platform = new THREE.Mesh(
+                new THREE.CylinderGeometry(3, 3, 0.2, 32),
+                new THREE.MeshStandardMaterial({ 
+                    color: 0xe6ccff, // Soft purple
+                    transparent: true,
+                    opacity: 0.6
+                })
+            );
+            
+            // Add some floating crystals
+            for (let j = 0; j < 5; j++) {
+                const crystal = new THREE.Mesh(
+                    new THREE.OctahedronGeometry(0.3),
+                    new THREE.MeshStandardMaterial({ 
+                        color: 0x9966ff,
+                        emissive: 0x3311aa,
+                        emissiveIntensity: 0.5
+                    })
+                );
+                
+                const angle = (j / 5) * Math.PI * 2;
+                crystal.position.set(
+                    Math.cos(angle) * 2,
+                    Math.sin(Date.now() * 0.001 + j) * 0.5 + 1,
+                    Math.sin(angle) * 2
+                );
+                spot.add(crystal);
+            }
+            
+            spot.add(platform);
+            spot.position.set(
+                Math.random() * 60 - 30,
+                0.1,
+                Math.random() * 60 - 30
+            );
+            
+            this.meditationSpots.push(spot);
+            this.scene.add(spot);
+        }
+    }
+
+    updateMeditationSpots() {
+        const playerPos = this.player.position.clone();
+        playerPos.y = 0;
+        
+        this.meditationSpots.forEach(spot => {
+            // Rotate crystals
+            spot.children.forEach((crystal, index) => {
+                if (index > 0) { // Skip the platform (index 0)
+                    crystal.position.y = Math.sin(Date.now() * 0.001 + index) * 0.5 + 1;
+                    crystal.rotation.y += 0.01;
+                }
+            });
+            
+            // Check if player is in meditation spot
+            const distance = playerPos.distanceTo(spot.position);
+            if (distance < 3) {
+                this.heal(0.2);
+                this.increaseEnergy(0.3);
+                this.healingProgress += 0.01;
+                // Update progress display
+                document.querySelector('#progress-fill').style.width = 
+                    (this.healingProgress * 100) + '%';
+            }
+        });
+    }
+
+    increaseEnergy(amount) {
+        this.energy = Math.min(100, this.energy + amount);
+        document.querySelector('#energy-fill').style.width = this.energy + '%';
+    }
+
     animate() {
         requestAnimationFrame(() => this.animate());
         
@@ -414,7 +501,12 @@ class Game {
         this.movePlayer();
         this.updateCamera();
         this.updateHealingZones();
+        this.updateMeditationSpots();
         this.updateNPCs();
+        
+        // Slowly decrease energy over time
+        this.energy = Math.max(0, this.energy - 0.01);
+        document.querySelector('#energy-fill').style.width = this.energy + '%';
         
         // Render scene
         this.renderer.render(this.scene, this.camera);
