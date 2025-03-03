@@ -1,3 +1,11 @@
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { VignetteShader } from 'three/addons/shaders/VignetteShader.js';
+
 // Game Systems
 class WeatherSystem {
     constructor() {
@@ -976,6 +984,19 @@ class VegetationSystem {
 class Game {
     constructor() {
         try {
+            // Initialize all arrays and collections first
+            this.flowers = [];
+            this.healingZones = [];
+            this.meditationSpots = [];
+            this.npcs = [];
+            this.achievements = [];
+            this.particles = [];
+            this.effects = [];
+            this.sounds = {};
+            this.animations = new Map();
+            this.colliders = new Map();
+            this.paths = new Map();
+
             // Initialize basic properties
             this.health = 100;
             this.energy = 100;
@@ -987,11 +1008,9 @@ class Game {
             this.healingProgress = 0;
             this.meditationTime = 0;
             this.isMeditating = false;
-            this.flowers = [];
             this.level = 1;
             this.experience = 0;
             this.maxExperience = 100;
-            this.achievements = [];
             this.time = 0;
             this.gameState = 'playing';
             this.lastUpdate = Date.now();
