@@ -4,27 +4,33 @@ class Game {
         this.initialize();
         this.setupInputs();
         this.health = 100;
-        this.energy = 100; // Added energy system for growth mechanics
+        this.energy = 100;
         this.isJumping = false;
         this.velocity = new THREE.Vector3();
         this.moveSpeed = 0.1;
         this.jumpForce = 0.3;
         this.gravity = 0.01;
-        this.healingProgress = 0; // Track overall healing progress
+        this.healingProgress = 0;
+        this.meditationTime = 0;
+        this.isMeditating = false;
+        this.flowers = [];
     }
 
     initialize() {
         try {
             // Create scene with a calming sky color
             this.scene = new THREE.Scene();
-            this.scene.background = new THREE.Color(0xb8e6ff); // Lighter, more peaceful sky blue
+            this.scene.background = new THREE.Color(0xb8e6ff);
             
             // Create camera
             this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             this.camera.position.set(0, 5, 10);
             
-            // Create renderer
-            this.renderer = new THREE.WebGLRenderer({ antialias: true });
+            // Create renderer with better quality
+            this.renderer = new THREE.WebGLRenderer({ 
+                antialias: true,
+                alpha: true
+            });
             this.renderer.setSize(window.innerWidth, window.innerHeight);
             this.renderer.shadowMap.enabled = true;
             this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -33,22 +39,18 @@ class Game {
             // Add lights
             this.addLights();
             
-            // Add basic ground
-            this.addGround();
-
             // Add environment
-            this.addTrees();
+            this.addGround();
+            this.addFlowers();
+            this.addMeditationSpots();
             this.addHealingZones();
-            this.addMeditationSpots(); // New peaceful areas
             this.addNPCs();
-
-            // Add player
             this.addPlayer();
             
             // Handle window resize
             window.addEventListener('resize', () => this.onWindowResize(), false);
             
-            // Hide loading screen once everything is ready
+            // Hide loading screen
             document.getElementById('loading').style.display = 'none';
             
             // Start animation loop
@@ -89,32 +91,41 @@ class Game {
 
     addLights() {
         // Ambient light
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
         this.scene.add(ambientLight);
         
         // Directional light (sun)
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
         directionalLight.position.set(5, 5, 5);
         directionalLight.castShadow = true;
         directionalLight.shadow.mapSize.width = 2048;
         directionalLight.shadow.mapSize.height = 2048;
         this.scene.add(directionalLight);
+
+        // Add a gentle point light for better atmosphere
+        const pointLight = new THREE.PointLight(0xffffff, 0.5, 50);
+        pointLight.position.set(0, 10, 0);
+        this.scene.add(pointLight);
     }
 
     addGround() {
-        // Create a large ground plane with a grass-like texture
-        const groundGeometry = new THREE.PlaneGeometry(100, 100, 20, 20);
+        // Create a more natural-looking ground
+        const groundGeometry = new THREE.PlaneGeometry(100, 100, 50, 50);
         const groundMaterial = new THREE.MeshStandardMaterial({ 
             color: 0x3a7e4f,
             roughness: 0.8,
-            metalness: 0.2
+            metalness: 0.2,
+            wireframe: false
         });
         
-        // Add some height variation to create a more natural terrain
+        // Add more natural terrain variation
         const vertices = groundGeometry.attributes.position.array;
         for (let i = 0; i < vertices.length; i += 3) {
-            if (i !== 0) { // Don't modify the center point
-                vertices[i + 1] = Math.random() * 0.5; // Random height between 0 and 0.5
+            if (i !== 0) {
+                const x = vertices[i];
+                const z = vertices[i + 2];
+                // Create gentle hills using sine waves
+                vertices[i + 1] = Math.sin(x * 0.1) * 0.5 + Math.cos(z * 0.1) * 0.5;
             }
         }
         
@@ -122,6 +133,75 @@ class Game {
         this.ground.rotation.x = -Math.PI / 2;
         this.ground.receiveShadow = true;
         this.scene.add(this.ground);
+    }
+
+    addFlowers() {
+        // Create flowers that grow and bloom
+        for (let i = 0; i < 50; i++) {
+            const flower = new THREE.Group();
+            
+            // Stem
+            const stem = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.05, 0.05, 0.5, 8),
+                new THREE.MeshStandardMaterial({ color: 0x2ecc71 })
+            );
+            
+            // Petals
+            const petals = new THREE.Group();
+            for (let j = 0; j < 6; j++) {
+                const petal = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.1, 8, 8),
+                    new THREE.MeshStandardMaterial({ 
+                        color: 0xff69b4,
+                        emissive: 0xff1493,
+                        emissiveIntensity: 0.2
+                    })
+                );
+                const angle = (j / 6) * Math.PI * 2;
+                petal.position.set(
+                    Math.cos(angle) * 0.1,
+                    0.3,
+                    Math.sin(angle) * 0.1
+                );
+                petals.add(petal);
+            }
+            
+            flower.add(stem);
+            flower.add(petals);
+            
+            // Random position on ground
+            const x = Math.random() * 80 - 40;
+            const z = Math.random() * 80 - 40;
+            flower.position.set(x, 0, z);
+            
+            // Add growth animation properties
+            flower.scale.set(0, 0, 0);
+            flower.growthProgress = 0;
+            flower.isGrowing = true;
+            
+            this.flowers.push(flower);
+            this.scene.add(flower);
+        }
+    }
+
+    updateFlowers() {
+        this.flowers.forEach(flower => {
+            if (flower.isGrowing) {
+                flower.growthProgress += 0.01;
+                flower.scale.set(
+                    flower.growthProgress,
+                    flower.growthProgress,
+                    flower.growthProgress
+                );
+                
+                if (flower.growthProgress >= 1) {
+                    flower.isGrowing = false;
+                }
+            }
+            
+            // Gentle swaying animation
+            flower.rotation.y = Math.sin(Date.now() * 0.001 + flower.position.x) * 0.1;
+        });
     }
 
     addPlayer() {
@@ -245,46 +325,6 @@ class Game {
             
             this.npcs.push(npc);
             this.scene.add(npc);
-        }
-    }
-
-    addTrees() {
-        this.trees = [];
-        
-        // Simple tree creation function
-        const createTree = (x, z) => {
-            const tree = new THREE.Group();
-            
-            const trunk = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.2, 0.2, 2, 8),
-                new THREE.MeshStandardMaterial({ color: 0x8b4513 })
-            );
-            
-            const leaves = new THREE.Mesh(
-                new THREE.ConeGeometry(1, 2, 8),
-                new THREE.MeshStandardMaterial({ color: 0x228b22 })
-            );
-            
-            trunk.position.y = 1;
-            leaves.position.y = 2.5;
-            
-            trunk.castShadow = true;
-            leaves.castShadow = true;
-            
-            tree.add(trunk);
-            tree.add(leaves);
-            tree.position.set(x, 0, z);
-            
-            return tree;
-        };
-        
-        // Add some randomly placed trees
-        for (let i = 0; i < 20; i++) {
-            const x = Math.random() * 80 - 40;
-            const z = Math.random() * 80 - 40;
-            const tree = createTree(x, z);
-            this.trees.push(tree);
-            this.scene.add(tree);
         }
     }
 
@@ -417,32 +457,35 @@ class Game {
     addMeditationSpots() {
         this.meditationSpots = [];
         
-        // Create peaceful meditation areas
         for (let i = 0; i < 3; i++) {
             const spot = new THREE.Group();
             
-            // Create a peaceful circle platform
+            // Create a more elaborate meditation platform
             const platform = new THREE.Mesh(
                 new THREE.CylinderGeometry(3, 3, 0.2, 32),
                 new THREE.MeshStandardMaterial({ 
-                    color: 0xe6ccff, // Soft purple
+                    color: 0xe6ccff,
                     transparent: true,
-                    opacity: 0.6
+                    opacity: 0.6,
+                    emissive: 0x9966ff,
+                    emissiveIntensity: 0.2
                 })
             );
             
-            // Add some floating crystals
-            for (let j = 0; j < 5; j++) {
+            // Add floating crystals with better effects
+            for (let j = 0; j < 8; j++) {
                 const crystal = new THREE.Mesh(
                     new THREE.OctahedronGeometry(0.3),
                     new THREE.MeshStandardMaterial({ 
                         color: 0x9966ff,
                         emissive: 0x3311aa,
-                        emissiveIntensity: 0.5
+                        emissiveIntensity: 0.5,
+                        transparent: true,
+                        opacity: 0.8
                     })
                 );
                 
-                const angle = (j / 5) * Math.PI * 2;
+                const angle = (j / 8) * Math.PI * 2;
                 crystal.position.set(
                     Math.cos(angle) * 2,
                     Math.sin(Date.now() * 0.001 + j) * 0.5 + 1,
@@ -451,7 +494,32 @@ class Game {
                 spot.add(crystal);
             }
             
+            // Add energy particles
+            const particles = new THREE.Group();
+            for (let j = 0; j < 20; j++) {
+                const particle = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.05, 8, 8),
+                    new THREE.MeshBasicMaterial({ 
+                        color: 0x9966ff,
+                        transparent: true,
+                        opacity: 0.6
+                    })
+                );
+                
+                const angle = Math.random() * Math.PI * 2;
+                const radius = Math.random() * 3;
+                particle.position.set(
+                    Math.cos(angle) * radius,
+                    Math.random() * 2,
+                    Math.sin(angle) * radius
+                );
+                particles.add(particle);
+            }
+            
             spot.add(platform);
+            spot.add(particles);
+            spot.particles = particles;
+            
             spot.position.set(
                 Math.random() * 60 - 30,
                 0.1,
@@ -468,23 +536,40 @@ class Game {
         playerPos.y = 0;
         
         this.meditationSpots.forEach(spot => {
-            // Rotate crystals
-            spot.children.forEach((crystal, index) => {
-                if (index > 0) { // Skip the platform (index 0)
-                    crystal.position.y = Math.sin(Date.now() * 0.001 + index) * 0.5 + 1;
-                    crystal.rotation.y += 0.01;
+            // Update crystals
+            spot.children.forEach((child, index) => {
+                if (index > 0 && index <= 8) { // Crystals
+                    child.position.y = Math.sin(Date.now() * 0.001 + index) * 0.5 + 1;
+                    child.rotation.y += 0.01;
                 }
             });
+            
+            // Update particles
+            if (spot.particles) {
+                spot.particles.rotation.y += 0.01;
+                spot.particles.children.forEach(particle => {
+                    particle.position.y = Math.sin(Date.now() * 0.003 + particle.position.x) * 0.5 + 1;
+                });
+            }
             
             // Check if player is in meditation spot
             const distance = playerPos.distanceTo(spot.position);
             if (distance < 3) {
-                this.heal(0.2);
-                this.increaseEnergy(0.3);
-                this.healingProgress += 0.01;
-                // Update progress display
+                this.isMeditating = true;
+                this.meditationTime += 0.01;
+                this.heal(0.1);
+                this.increaseEnergy(0.2);
+                this.healingProgress += 0.005;
+                
+                // Update UI
                 document.querySelector('#progress-fill').style.width = 
                     (this.healingProgress * 100) + '%';
+                
+                // Visual feedback
+                spot.children[0].material.emissiveIntensity = 0.4;
+            } else {
+                this.isMeditating = false;
+                spot.children[0].material.emissiveIntensity = 0.2;
             }
         });
     }
@@ -502,11 +587,14 @@ class Game {
         this.updateCamera();
         this.updateHealingZones();
         this.updateMeditationSpots();
+        this.updateFlowers();
         this.updateNPCs();
         
-        // Slowly decrease energy over time
-        this.energy = Math.max(0, this.energy - 0.01);
-        document.querySelector('#energy-fill').style.width = this.energy + '%';
+        // Energy management
+        if (!this.isMeditating) {
+            this.energy = Math.max(0, this.energy - 0.01);
+            document.querySelector('#energy-fill').style.width = this.energy + '%';
+        }
         
         // Render scene
         this.renderer.render(this.scene, this.camera);
