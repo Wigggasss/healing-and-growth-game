@@ -1041,12 +1041,12 @@ class Game {
             // Load textures with error handling
             this.textures = {};
             const textureUrls = {
-                grass: 'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/terrain/grasslight-big.jpg',
-                dirt: 'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/terrain/dirt.jpg',
-                rock: 'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/terrain/rock.jpg',
-                flower: 'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/flowers/flower1.jpg',
-                healing: 'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/terrain/grasslight-big.jpg',
-                meditation: 'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/terrain/rock.jpg'
+                grass: 'https://unpkg.com/three@0.160.0/examples/textures/terrain/grasslight-big.jpg',
+                dirt: 'https://unpkg.com/three@0.160.0/examples/textures/terrain/dirt.jpg',
+                rock: 'https://unpkg.com/three@0.160.0/examples/textures/terrain/rock.jpg',
+                flower: 'https://unpkg.com/three@0.160.0/examples/textures/flowers/flower1.jpg',
+                healing: 'https://unpkg.com/three@0.160.0/examples/textures/terrain/grasslight-big.jpg',
+                meditation: 'https://unpkg.com/three@0.160.0/examples/textures/terrain/rock.jpg'
             };
 
             // Load textures with promises
