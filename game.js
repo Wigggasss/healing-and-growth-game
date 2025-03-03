@@ -1041,12 +1041,12 @@ class Game {
             // Load textures with error handling
             this.textures = {};
             const textureUrls = {
-                grass: 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/textures/terrain/grasslight-big.jpg',
-                dirt: 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/textures/terrain/dirt.jpg',
-                rock: 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/textures/terrain/rock.jpg',
-                flower: 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/textures/flowers/flower1.jpg',
-                healing: 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/textures/terrain/grasslight-big.jpg',
-                meditation: 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/textures/terrain/rock.jpg'
+                grass: 'https://threejs.org/examples/textures/terrain/grasslight-big.jpg',
+                dirt: 'https://threejs.org/examples/textures/terrain/dirt.jpg',
+                rock: 'https://threejs.org/examples/textures/terrain/rock.jpg',
+                flower: 'https://threejs.org/examples/textures/flowers/flower1.jpg',
+                healing: 'https://threejs.org/examples/textures/terrain/grasslight-big.jpg',
+                meditation: 'https://threejs.org/examples/textures/terrain/rock.jpg'
             };
 
             // Load textures with promises
