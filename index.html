@@ -13,7 +13,6 @@
         }
     }
     </script>
-    <script type="module" src="game.js"></script>
     <style>
         body {
             margin: 0;
@@ -292,29 +291,17 @@
         <p>Collect items and complete quests to level up and become stronger</p>
         <p>Press I to open inventory • Press Q to view quests • Press K to view skills</p>
     </div>
-    <script>
-        function handleScriptError(script) {
-            console.error('Error loading script:', script.src);
-            const errorDiv = document.getElementById('error');
-            errorDiv.style.display = 'block';
-            errorDiv.textContent = 'Error loading required scripts. Please check your internet connection and refresh the page.';
-        }
-
-        window.onerror = function(msg, url, line) {
-            const errorDiv = document.getElementById('error');
-            errorDiv.style.display = 'block';
-            errorDiv.textContent = 'Error loading game. Please refresh the page.';
-            console.error('Error:', msg, 'at', url, ':', line);
-            return false;
-        };
-
-        // Wait for all scripts to load before starting the game
+    <script type="module">
+        // Wait for Three.js to be available
+        import * as THREE from 'three';
+        
+        // Create global game instance
         window.addEventListener('load', () => {
-            if (typeof THREE === 'undefined') {
-                const errorDiv = document.getElementById('error');
-                errorDiv.style.display = 'block';
-                errorDiv.textContent = 'Three.js failed to load. Please check your internet connection and refresh the page.';
-                return;
+            try {
+                window.game = new Game();
+            } catch (error) {
+                console.error('Error starting game:', error);
+                document.getElementById('loading').textContent = 'Error loading game. Please refresh the page.';
             }
         });
     </script>
