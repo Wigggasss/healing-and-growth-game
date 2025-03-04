@@ -1041,12 +1041,12 @@ class Game {
             // Load textures with error handling
             this.textures = {};
             const textureUrls = {
-                grass: 'textures/grass.png',
-                dirt: 'textures/dirt.png',
-                rock: 'textures/rock_round.png',
-                flower: 'textures/rose.png',
-                meditation: 'textures/meditation.png',
-                healing: 'textures/spiritual-awakening-concept.jpg'
+                grass: 'https://wigggasss.github.io/healing-and-growth-game/textures/grass.png',
+                dirt: 'https://wigggasss.github.io/healing-and-growth-game/textures/dirt.png',
+                rock: 'https://wigggasss.github.io/healing-and-growth-game/textures/rock_round.png',
+                flower: 'https://wigggasss.github.io/healing-and-growth-game/textures/rose.png',
+                meditation: 'https://wigggasss.github.io/healing-and-growth-game/textures/meditation.png',
+                healing: 'https://wigggasss.github.io/healing-and-growth-game/textures/spiritual-awakening-concept.jpg'
             };
 
             // Load textures with promises
