@@ -1042,7 +1042,7 @@ class Game {
             this.textures = {};
             const textureUrls = {
                 grass: './textures/grass.png',
-                dirt: './textures/dirt.jpg',
+                dirt: './textures/dirt.png',
                 rock: './textures/rock_round.png',
                 flower: './textures/rose.png',
                 meditation: './textures/meditation.png',
