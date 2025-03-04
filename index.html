@@ -343,18 +343,7 @@
 
     <script type="module">
         import { Game } from './game.js';
-
-        window.addEventListener('load', () => {
-            try {
-                const game = new Game();
-                window.game = game; // Make game instance globally available
-            } catch (error) {
-                console.error('Error creating game:', error);
-                const errorDiv = document.getElementById('error');
-                errorDiv.textContent = 'Error loading game. Please refresh the page.';
-                errorDiv.style.display = 'block';
-            }
-        });
+        window.game = new Game();
     </script>
 </body>
 </html> 
