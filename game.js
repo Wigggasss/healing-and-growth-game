@@ -1042,7 +1042,7 @@ class Game {
             this.textures = {};
             const textureUrls = {
                 grass: 'https://wigggasss.github.io/healing-and-growth-game/textures/grass.png',
-                dirt: 'https://wigggasss.github.io/healing-and-growth-game/textures/dirt.png',
+                dirt: 'https://wigggasss.github.io/healing-and-growth-game/textures/close-up-mixture-clay-powder.jpg',
                 rock: 'https://wigggasss.github.io/healing-and-growth-game/textures/rock_round.png',
                 flower: 'https://wigggasss.github.io/healing-and-growth-game/textures/rose.png',
                 meditation: 'https://wigggasss.github.io/healing-and-growth-game/textures/meditation.png',
