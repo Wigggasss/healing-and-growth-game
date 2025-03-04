@@ -1041,12 +1041,12 @@ class Game {
             // Load textures with error handling
             this.textures = {};
             const textureUrls = {
-                grass: 'https://opengameart.org/sites/default/files/Grass%2011.png',
-                dirt: 'https://opengameart.org/sites/default/files/Grass%2012.png',
-                rock: 'https://opengameart.org/sites/default/files/Grass%2013.png',
-                flower: 'https://opengameart.org/sites/default/files/Grass%2014.png',
-                healing: 'https://opengameart.org/sites/default/files/Grass%2015.png',
-                meditation: 'https://opengameart.org/sites/default/files/Grass%2016.png'
+                grass: 'https://kenney.nl/content/assets/kenney-nature-kit/Tiles/tile_0000.png',
+                dirt: 'https://kenney.nl/content/assets/kenney-nature-kit/Tiles/tile_0001.png',
+                rock: 'https://kenney.nl/content/assets/kenney-nature-kit/Tiles/tile_0002.png',
+                flower: 'https://kenney.nl/content/assets/kenney-nature-kit/Props/prop_flower_01.png',
+                healing: 'https://kenney.nl/content/assets/kenney-nature-kit/Tiles/tile_0000.png',
+                meditation: 'https://kenney.nl/content/assets/kenney-nature-kit/Tiles/tile_0002.png'
             };
 
             // Load textures with promises
