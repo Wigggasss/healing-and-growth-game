@@ -1041,27 +1041,31 @@ class Game {
             // Load textures with error handling
             this.textures = {};
             const textureUrls = {
-                grass: 'https://wigggasss.github.io/healing-and-growth-game/textures/grass.png',
-                dirt: 'https://wigggasss.github.io/healing-and-growth-game/textures/close-up-mixture-clay-powder.jpg',
-                rock: 'https://wigggasss.github.io/healing-and-growth-game/textures/rock_round.png',
-                flower: 'https://wigggasss.github.io/healing-and-growth-game/textures/rose.png',
-                meditation: 'https://wigggasss.github.io/healing-and-growth-game/textures/meditation.png',
-                healing: 'https://wigggasss.github.io/healing-and-growth-game/textures/spiritual-awakening-concept.jpg'
+                grass: './textures/grass.png',
+                dirt: './textures/dirt.jpg',
+                rock: './textures/rock_round.png',
+                flower: './textures/rose.png',
+                meditation: './textures/meditation.png',
+                healing: './textures/spiritual-awakening-concept.jpg'
             };
 
             // Load textures with promises
             const texturePromises = Object.entries(textureUrls).map(([key, url]) => {
                 return new Promise((resolve, reject) => {
+                    console.log(`Attempting to load texture: ${key} from ${url}`);
                     this.textureLoader.load(
                         url,
                         (texture) => {
+                            console.log(`Successfully loaded texture: ${key}`);
                             this.textures[key] = texture;
-                            console.log(`Loaded texture: ${key}`);
                             resolve();
                         },
-                        undefined,
+                        (progress) => {
+                            console.log(`Loading progress for ${key}: ${(progress.loaded / progress.total * 100).toFixed(2)}%`);
+                        },
                         (error) => {
                             console.error(`Error loading texture ${key}:`, error);
+                            console.error(`Failed URL: ${url}`);
                             reject(error);
                         }
                     );
