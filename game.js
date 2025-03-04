@@ -239,17 +239,17 @@ class Inventory {
 
     addDefaultItems() {
         this.addItem({
-            name: 'Health Potion',
+            name: 'Spiritual Essence',
             type: 'consumable',
-            effect: { health: 50 },
-            icon: '❤️'
+            effect: { energy: 50 },
+            icon: '✨'
         });
         
         this.addItem({
-            name: 'Energy Crystal',
+            name: 'Universal Wisdom',
             type: 'consumable',
-            effect: { energy: 50 },
-            icon: '⚡'
+            effect: { health: 50 },
+            icon: '🌟'
         });
     }
 
@@ -321,30 +321,45 @@ class QuestSystem {
     addDefaultQuests() {
         this.addQuest({
             id: 'quest1',
-            title: 'First Steps',
-            description: 'Find and meditate at a meditation spot',
+            title: 'The Path of Letting Go',
+            description: 'Begin your journey of healing by meditating at sacred spots and understanding the universal principle of release',
             objectives: [
-                { type: 'meditate', target: 1, current: 0 }
+                { type: 'meditate', target: 3, current: 0 }
             ],
             rewards: {
-                experience: 50,
+                experience: 100,
                 items: [
-                    { name: 'Health Potion', type: 'consumable', effect: { health: 50 } }
+                    { name: 'Spiritual Essence', type: 'consumable', effect: { energy: 50 } }
                 ]
             }
         });
 
         this.addQuest({
             id: 'quest2',
-            title: 'Flower Power',
-            description: 'Collect 5 flowers',
+            title: 'Manifesting Abundance',
+            description: 'Collect sacred flowers while practicing the universal law of attraction',
             objectives: [
-                { type: 'collect_flowers', target: 5, current: 0 }
+                { type: 'collect_flowers', target: 7, current: 0 }
             ],
             rewards: {
-                experience: 100,
+                experience: 150,
                 items: [
-                    { name: 'Energy Crystal', type: 'consumable', effect: { energy: 50 } }
+                    { name: 'Universal Wisdom', type: 'consumable', effect: { health: 50 } }
+                ]
+            }
+        });
+
+        this.addQuest({
+            id: 'quest3',
+            title: 'The Power of Intention',
+            description: 'Visit healing zones to strengthen your manifestation abilities',
+            objectives: [
+                { type: 'heal', target: 5, current: 0 }
+            ],
+            rewards: {
+                experience: 200,
+                items: [
+                    { name: 'Manifestation Crystal', type: 'consumable', effect: { energy: 75, health: 75 } }
                 ]
             }
         });
@@ -427,27 +442,27 @@ class SkillSystem {
 
     addDefaultSkills() {
         this.addSkill({
-            name: 'Healing',
+            name: 'Release & Let Go',
             level: 1,
             maxLevel: 10,
-            description: 'Increases healing effectiveness',
-            effect: { healingMultiplier: 1.1 }
+            description: 'Master the universal principle of release to heal from past experiences',
+            effect: { healingMultiplier: 1.2 }
         });
 
         this.addSkill({
-            name: 'Energy',
+            name: 'Law of Attraction',
             level: 1,
             maxLevel: 10,
-            description: 'Increases energy regeneration',
-            effect: { energyMultiplier: 1.1 }
+            description: 'Harness the universal law of attraction to manifest your desires',
+            effect: { energyMultiplier: 1.2 }
         });
 
         this.addSkill({
-            name: 'Growth',
+            name: 'Universal Flow',
             level: 1,
             maxLevel: 10,
-            description: 'Increases experience gain',
-            effect: { experienceMultiplier: 1.1 }
+            description: 'Align with universal energy flow for enhanced manifestation',
+            effect: { experienceMultiplier: 1.2 }
         });
     }
 
@@ -1461,7 +1476,7 @@ class Game {
     addHealingZones() {
         this.healingZones = [];
         
-        // Create several healing zones
+        // Create sacred healing zones
         for (let i = 0; i < 5; i++) {
             const zoneGeometry = new THREE.CylinderGeometry(2, 2, 0.1, 32);
             const zoneMaterial = new THREE.MeshStandardMaterial({
@@ -1483,7 +1498,7 @@ class Game {
             this.healingZones.push(zone);
             this.scene.add(zone);
             
-            // Add particles
+            // Add spiritual healing particles
             this.addHealingParticles(zone);
         }
     }
@@ -1711,7 +1726,7 @@ class Game {
         for (let i = 0; i < 3; i++) {
             const spot = new THREE.Group();
             
-            // Create a more elaborate meditation platform
+            // Create a sacred meditation platform
             const platform = new THREE.Mesh(
                 new THREE.CylinderGeometry(3, 3, 0.2, 32),
                 new THREE.MeshStandardMaterial({ 
@@ -1724,7 +1739,7 @@ class Game {
                 })
             );
             
-            // Add floating crystals with better effects
+            // Add sacred crystals with spiritual effects
             for (let j = 0; j < 8; j++) {
                 const crystal = new THREE.Mesh(
                     new THREE.OctahedronGeometry(0.3),
@@ -1746,7 +1761,7 @@ class Game {
                 spot.add(crystal);
             }
             
-            // Add energy particles
+            // Add spiritual energy particles
             const particles = new THREE.Group();
             for (let j = 0; j < 20; j++) {
                 const particle = new THREE.Mesh(
@@ -1788,7 +1803,7 @@ class Game {
         playerPos.y = 0;
         
         this.meditationSpots.forEach(spot => {
-            // Update crystals
+            // Update sacred crystals
             spot.children.forEach((child, index) => {
                 if (index > 0 && index <= 8) { // Crystals
                     child.position.y = Math.sin(Date.now() * 0.001 + index) * 0.5 + 1;
@@ -1796,7 +1811,7 @@ class Game {
                 }
             });
             
-            // Update particles
+            // Update spiritual energy particles
             if (spot.particles) {
                 spot.particles.rotation.y += 0.01;
                 spot.particles.children.forEach(particle => {
@@ -1804,7 +1819,7 @@ class Game {
                 });
             }
             
-            // Check if player is in meditation spot
+            // Check if player is in sacred meditation spot
             const distance = playerPos.distanceTo(spot.position);
             if (distance < 3) {
                 this.isMeditating = true;
@@ -1844,7 +1859,7 @@ class Game {
     }
 
     addExperience(amount) {
-        const experienceEffect = amount * (1 + this.skills.getSkillEffect('Growth')?.experienceMultiplier || 1);
+        const experienceEffect = amount * (1 + this.skills.getSkillEffect('Universal Flow')?.experienceMultiplier || 1);
         this.experience += experienceEffect;
         
         // Level up check
