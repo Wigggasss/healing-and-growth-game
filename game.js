@@ -1041,29 +1041,31 @@ class Game {
             // Load textures with error handling
             this.textures = {};
             const textureUrls = {
-                grass: 'https://kenney.nl/content/assets/kenney-nature-kit/Tiles/tile_0000.png',
-                dirt: 'https://kenney.nl/content/assets/kenney-nature-kit/Tiles/tile_0001.png',
-                rock: 'https://kenney.nl/content/assets/kenney-nature-kit/Tiles/tile_0002.png',
-                flower: 'https://kenney.nl/content/assets/kenney-nature-kit/Props/prop_flower_01.png',
-                healing: 'https://kenney.nl/content/assets/kenney-nature-kit/Tiles/tile_0000.png',
-                meditation: 'https://kenney.nl/content/assets/kenney-nature-kit/Tiles/tile_0002.png'
+                grass: 'https://cors-anywhere.herokuapp.com/https://opengameart.org/sites/default/files/Grass%2011.png',
+                dirt: 'https://cors-anywhere.herokuapp.com/https://opengameart.org/sites/default/files/Grass%2012.png',
+                rock: 'https://cors-anywhere.herokuapp.com/https://opengameart.org/sites/default/files/Grass%2013.png',
+                flower: 'https://cors-anywhere.herokuapp.com/https://opengameart.org/sites/default/files/Grass%2014.png',
+                meditation: 'https://cors-anywhere.herokuapp.com/https://opengameart.org/sites/default/files/Grass%2016.png',
+                healing: 'https://cors-anywhere.herokuapp.com/https://opengameart.org/sites/default/files/Grass%2015.png'
             };
 
-            // Load textures with promises
+            // Load textures with promises and CORS proxy
             const texturePromises = Object.entries(textureUrls).map(([key, url]) => {
                 return new Promise((resolve, reject) => {
-                    this.textureLoader.load(
-                        url,
-                        (texture) => {
-                            this.textures[key] = texture;
-                            resolve();
-                        },
-                        undefined,
-                        (error) => {
-                            console.error(`Error loading texture ${key}:`, error);
-                            reject(error);
-                        }
-                    );
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    img.onload = () => {
+                        const texture = new THREE.Texture(img);
+                        texture.needsUpdate = true;
+                        this.textures[key] = texture;
+                        console.log(`Loaded texture: ${key}`);
+                        resolve();
+                    };
+                    img.onerror = (error) => {
+                        console.error(`Error loading texture ${key}:`, error);
+                        reject(error);
+                    };
+                    img.src = url;
                 });
             });
 
