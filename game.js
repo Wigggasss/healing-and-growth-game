@@ -1041,10 +1041,10 @@ class Game {
             // Load textures with error handling
             this.textures = {};
             const textureUrls = {
-                grass: 'https://cors-anywhere.herokuapp.com/https://opengameart.org/sites/default/files/Grass%2011.png',
-                dirt: 'https://cors-anywhere.herokuapp.com/https://opengameart.org/sites/default/files/Grass%2012.png',
-                rock: 'https://cors-anywhere.herokuapp.com/https://opengameart.org/sites/default/files/Grass%2013.png',
-                flower: 'https://cors-anywhere.herokuapp.com/https://opengameart.org/sites/default/files/Grass%2014.png',
+                grass: 'https://opengameart.org/content/grass-1',
+                dirt: 'https://opengameart.org/content/simple-seamless-tiles-of-dirt-and-sand',
+                rock: 'https://opengameart.org/content/rock-0',
+                flower: 'https://opengameart.org/content/rose-flower-pyxeledit-document-and-image',
                 meditation: 'https://cors-anywhere.herokuapp.com/https://opengameart.org/sites/default/files/Grass%2016.png',
                 healing: 'https://cors-anywhere.herokuapp.com/https://opengameart.org/sites/default/files/Grass%2015.png'
             };
