@@ -1041,31 +1041,30 @@ class Game {
             // Load textures with error handling
             this.textures = {};
             const textureUrls = {
-                grass: 'https://opengameart.org/content/grass-1',
-                dirt: 'https://opengameart.org/content/simple-seamless-tiles-of-dirt-and-sand',
-                rock: 'https://opengameart.org/content/rock-0',
-                flower: 'https://opengameart.org/content/rose-flower-pyxeledit-document-and-image',
-                meditation: 'https://cors-anywhere.herokuapp.com/https://opengameart.org/sites/default/files/Grass%2016.png',
-                healing: 'https://cors-anywhere.herokuapp.com/https://opengameart.org/sites/default/files/Grass%2015.png'
+                grass: 'textures/grass.png',
+                dirt: 'textures/dirt.png',
+                rock: 'textures/rock_round.png',
+                flower: 'textures/rose.png',
+                meditation: 'textures/meditation.png',
+                healing: 'textures/spiritual-awakening-concept.jpg'
             };
 
-            // Load textures with promises and CORS proxy
+            // Load textures with promises
             const texturePromises = Object.entries(textureUrls).map(([key, url]) => {
                 return new Promise((resolve, reject) => {
-                    const img = new Image();
-                    img.crossOrigin = 'anonymous';
-                    img.onload = () => {
-                        const texture = new THREE.Texture(img);
-                        texture.needsUpdate = true;
-                        this.textures[key] = texture;
-                        console.log(`Loaded texture: ${key}`);
-                        resolve();
-                    };
-                    img.onerror = (error) => {
-                        console.error(`Error loading texture ${key}:`, error);
-                        reject(error);
-                    };
-                    img.src = url;
+                    this.textureLoader.load(
+                        url,
+                        (texture) => {
+                            this.textures[key] = texture;
+                            console.log(`Loaded texture: ${key}`);
+                            resolve();
+                        },
+                        undefined,
+                        (error) => {
+                            console.error(`Error loading texture ${key}:`, error);
+                            reject(error);
+                        }
+                    );
                 });
             });
 
