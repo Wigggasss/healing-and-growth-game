@@ -996,8 +996,23 @@ class GrassSystem {
     loadGrassModel() {
         const loader = new GLTFLoader();
         loader.load(
-            'https://wigggasss.github.io/healing-and-growth-game/models/grass (1).glb',
+            'https://wigggasss.github.io/healing-and-growth-game/models/grass(1).glb',
             (gltf) => {
+                // Convert materials to standard Three.js materials
+                gltf.scene.traverse((node) => {
+                    if (node.isMesh) {
+                        // Create a new standard material
+                        const newMaterial = new THREE.MeshStandardMaterial({
+                            color: 0x3a7e4f, // Green color for grass
+                            roughness: 0.8,
+                            metalness: 0.2,
+                            emissive: 0x2d5a27,
+                            emissiveIntensity: 0.2
+                        });
+                        node.material = newMaterial;
+                    }
+                });
+                
                 this.grassModel = gltf.scene;
                 this.createGrass();
             },
@@ -1006,8 +1021,28 @@ class GrassSystem {
             },
             (error) => {
                 console.error('Error loading grass model:', error);
+                // Fallback to simple grass geometry if model fails to load
+                this.createFallbackGrass();
             }
         );
+    }
+
+    createFallbackGrass() {
+        // Create a simple grass blade geometry as fallback
+        const grassGeometry = new THREE.CylinderGeometry(0.05, 0.05, 0.5, 8);
+        const grassMaterial = new THREE.MeshStandardMaterial({
+            color: 0x3a7e4f,
+            roughness: 0.8,
+            metalness: 0.2,
+            emissive: 0x2d5a27,
+            emissiveIntensity: 0.2
+        });
+        
+        const grassBlade = new THREE.Mesh(grassGeometry, grassMaterial);
+        this.grassModel = new THREE.Group();
+        this.grassModel.add(grassBlade);
+        
+        this.createGrass();
     }
 
     createGrass() {
