@@ -1347,6 +1347,7 @@ class Game {
             this.pathfinding = new PathfindingSystem();
             this.terrain = new TerrainSystem();
             this.vegetation = new VegetationSystem();
+            this.grass = new GrassSystem();
 
             // Initialize each system with proper error handling
             try {
@@ -1419,6 +1420,12 @@ class Game {
                 this.vegetation.initialize(this.scene);
             } catch (error) {
                 console.error('Error initializing vegetation:', error);
+            }
+
+            try {
+                this.grass.initialize(this.scene);
+            } catch (error) {
+                console.error('Error initializing grass system:', error);
             }
 
             // Start background music after all systems are initialized
@@ -2124,12 +2131,19 @@ class Game {
         this.updateMeditationSpots();
         this.updateFlowers();
         this.updateNPCs();
-        this.grass.update();
+        
+        // Update grass system if it exists
+        if (this.grass) {
+            this.grass.update();
+        }
         
         // Energy management
         if (!this.isMeditating) {
             this.energy = Math.max(0, this.energy - 0.01);
-            document.querySelector('#energy-fill').style.width = this.energy + '%';
+            const energyFill = document.querySelector('#energy-fill');
+            if (energyFill) {
+                energyFill.style.width = this.energy + '%';
+            }
         }
         
         // Render scene
@@ -2150,6 +2164,7 @@ export {
     CollisionSystem,
     PathfindingSystem,
     TerrainSystem,
+    VegetationSystem,
     GrassSystem,
     Game
 }; 
