@@ -1212,7 +1212,7 @@ class Game {
             // Load textures with error handling
             this.textures = {};
             const textureUrls = {
-                grass: 'https://wigggasss.github.io/healing-and-growth-game/textures/grass.png',
+
                 dirt: 'https://wigggasss.github.io/healing-and-growth-game/textures/dirt.png',
                 rock: 'https://wigggasss.github.io/healing-and-growth-game/textures/rock_round.png',
                 flower: 'https://wigggasss.github.io/healing-and-growth-game/textures/rose.png',
