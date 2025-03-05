@@ -1056,7 +1056,7 @@ class Game {
             // Load textures with error handling
             this.textures = {};
             const textureUrls = {
-                grass: './textures/grass.png',
+                grass: './textures/grass.jpg',
                 dirt: './textures/dirt.png',
                 rock: './textures/rock_round.png',
                 flower: './textures/rose.png',
