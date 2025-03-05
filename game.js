@@ -1164,7 +1164,10 @@ class GrassSystem {
 class Game {
     constructor() {
         try {
-            // Initialize all arrays and collections first
+            // Initialize UI elements first
+            this.initializeUI();
+            
+            // Initialize all arrays and collections
             this.flowers = [];
             this.healingZones = [];
             this.meditationSpots = [];
@@ -1274,20 +1277,59 @@ class Game {
                     this.initializeSystems();
                     
                     // Hide loading screen
-                    document.getElementById('loading').style.display = 'none';
+                    const loadingScreen = document.getElementById('loading');
+                    if (loadingScreen) {
+                        loadingScreen.style.display = 'none';
+                    }
                     
                     // Start animation loop
                     this.animate();
                 })
                 .catch(error => {
                     console.error('Error loading textures:', error);
-                    document.getElementById('loading').textContent = 'Error loading game textures. Please refresh the page.';
+                    const loadingScreen = document.getElementById('loading');
+                    if (loadingScreen) {
+                        loadingScreen.textContent = 'Error loading game textures. Please refresh the page.';
+                    }
                 });
 
         } catch (error) {
             console.error('Error in Game constructor:', error);
-            document.getElementById('loading').textContent = 'Error loading game. Please refresh the page.';
+            const loadingScreen = document.getElementById('loading');
+            if (loadingScreen) {
+                loadingScreen.textContent = 'Error loading game. Please refresh the page.';
+            }
         }
+    }
+
+    initializeUI() {
+        // Create UI elements if they don't exist
+        const uiElements = {
+            'progress-fill': 'div',
+            'health-fill': 'div',
+            'energy-fill': 'div',
+            'experience-fill': 'div',
+            'level-display': 'div',
+            'level-up': 'div',
+            'loading': 'div'
+        };
+
+        Object.entries(uiElements).forEach(([id, elementType]) => {
+            if (!document.getElementById(id)) {
+                const element = document.createElement(elementType);
+                element.id = id;
+                element.className = id;
+                document.body.appendChild(element);
+            }
+        });
+
+        // Add click handler for audio initialization
+        document.addEventListener('click', () => {
+            if (this.sounds && !this.sounds.isInitialized) {
+                this.sounds.playMusic();
+                this.sounds.isInitialized = true;
+            }
+        }, { once: true });
     }
 
     initializeSystems() {
@@ -1995,8 +2037,10 @@ class Game {
                 this.addExperience(0.1);
                 
                 // Update UI
-                document.querySelector('#progress-fill').style.width = 
-                    (this.healingProgress * 100) + '%';
+                const progressFill = document.querySelector('#progress-fill');
+                if (progressFill) {
+                    progressFill.style.width = (this.healingProgress * 100) + '%';
+                }
                 
                 // Visual feedback
                 spot.children[0].material.emissiveIntensity = 0.4;
