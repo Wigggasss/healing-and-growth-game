@@ -1054,6 +1054,112 @@ class VegetationSystem {
     }
 }
 
+class GrassSystem {
+    constructor() {
+        this.grassInstances = [];
+        this.grassCount = 10000; // Number of grass blades
+        this.grassGeometry = null;
+        this.grassMaterial = null;
+        this.grassMesh = null;
+    }
+
+    initialize(scene) {
+        this.scene = scene;
+        this.createGrass();
+    }
+
+    createGrass() {
+        // Create a single grass blade geometry
+        const bladeGeometry = new THREE.PlaneGeometry(0.1, 0.5, 1, 4);
+        
+        // Create grass material with gradient
+        const grassMaterial = new THREE.MeshStandardMaterial({
+            color: 0x2ecc71,
+            side: THREE.DoubleSide,
+            roughness: 0.8,
+            metalness: 0.1,
+            emissive: 0x27ae60,
+            emissiveIntensity: 0.2
+        });
+
+        // Create instanced mesh for better performance
+        this.grassMesh = new THREE.InstancedMesh(
+            bladeGeometry,
+            grassMaterial,
+            this.grassCount
+        );
+
+        // Create grass instances
+        const matrix = new THREE.Matrix4();
+        const color = new THREE.Color();
+        const position = new THREE.Vector3();
+        const rotation = new THREE.Euler();
+        const quaternion = new THREE.Quaternion();
+        const scale = new THREE.Vector3();
+
+        for (let i = 0; i < this.grassCount; i++) {
+            // Random position
+            position.x = Math.random() * 80 - 40;
+            position.z = Math.random() * 80 - 40;
+            position.y = 0;
+
+            // Random rotation
+            rotation.x = 0;
+            rotation.y = Math.random() * Math.PI * 2;
+            rotation.z = Math.random() * 0.2 - 0.1; // Slight tilt
+
+            // Random scale
+            scale.x = 1;
+            scale.y = 0.5 + Math.random() * 0.5; // Varying heights
+            scale.z = 1;
+
+            // Set instance matrix
+            matrix.compose(position, quaternion.setFromEuler(rotation), scale);
+            this.grassMesh.setMatrixAt(i, matrix);
+
+            // Set instance color (slight variation)
+            color.setHSL(0.3 + Math.random() * 0.05, 0.7, 0.4 + Math.random() * 0.1);
+            this.grassMesh.setColorAt(i, color);
+        }
+
+        // Update instance matrices and colors
+        this.grassMesh.instanceMatrix.needsUpdate = true;
+        this.grassMesh.instanceColor.needsUpdate = true;
+
+        // Add grass to scene
+        this.scene.add(this.grassMesh);
+    }
+
+    update() {
+        if (!this.grassMesh) return;
+
+        const time = Date.now() * 0.001;
+        const matrix = new THREE.Matrix4();
+        const position = new THREE.Vector3();
+        const rotation = new THREE.Euler();
+        const quaternion = new THREE.Quaternion();
+        const scale = new THREE.Vector3();
+
+        // Update each grass blade
+        for (let i = 0; i < this.grassCount; i++) {
+            this.grassMesh.getMatrixAt(i, matrix);
+            matrix.decompose(position, quaternion, scale);
+
+            // Add wind effect
+            rotation.setFromQuaternion(quaternion);
+            rotation.z = Math.sin(time + position.x) * 0.1;
+            quaternion.setFromEuler(rotation);
+
+            // Rebuild matrix
+            matrix.compose(position, quaternion, scale);
+            this.grassMesh.setMatrixAt(i, matrix);
+        }
+
+        // Update instance matrices
+        this.grassMesh.instanceMatrix.needsUpdate = true;
+    }
+}
+
 // Game class definition
 class Game {
     constructor() {
@@ -1115,7 +1221,7 @@ class Game {
             // Load textures with error handling
             this.textures = {};
             const textureUrls = {
-                grass: 'https://wigggasss.github.io/healing-and-growth-game/textures/grass.jpg',
+                grass: 'https://wigggasss.github.io/healing-and-growth-game/textures/grass.png',
                 dirt: 'https://wigggasss.github.io/healing-and-growth-game/textures/dirt.png',
                 rock: 'https://wigggasss.github.io/healing-and-growth-game/textures/rock_round.png',
                 flower: 'https://wigggasss.github.io/healing-and-growth-game/textures/rose.png',
@@ -1974,6 +2080,7 @@ class Game {
         this.updateMeditationSpots();
         this.updateFlowers();
         this.updateNPCs();
+        this.grass.update();
         
         // Energy management
         if (!this.isMeditating) {
@@ -1999,5 +2106,6 @@ export {
     CollisionSystem,
     PathfindingSystem,
     TerrainSystem,
+    GrassSystem,
     Game
 }; 
