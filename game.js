@@ -628,11 +628,46 @@ class SoundSystem {
         this.sounds = {};
         this.music = null;
         this.isMuted = false;
+        this.isInitialized = false;
     }
 
     initialize() {
         this.loadSounds();
         this.setupMusic();
+        this.setupMuteButton();
+    }
+
+    setupMuteButton() {
+        // Create mute button if it doesn't exist
+        let muteButton = document.getElementById('mute-button');
+        if (!muteButton) {
+            muteButton = document.createElement('button');
+            muteButton.id = 'mute-button';
+            muteButton.innerHTML = '🔊';
+            muteButton.className = 'mute-button';
+            document.body.appendChild(muteButton);
+        }
+
+        // Style the mute button
+        muteButton.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            padding: 10px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+            font-size: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        `;
+
+        // Add click handler
+        muteButton.addEventListener('click', () => {
+            this.toggleMute();
+            muteButton.innerHTML = this.isMuted ? '🔇' : '🔊';
+        });
     }
 
     loadSounds() {
@@ -642,24 +677,48 @@ class SoundSystem {
             heal: new Audio('https://assets.mixkit.co/active_storage/sfx/1433/1433-preview.mp3'),
             energy: new Audio('https://assets.mixkit.co/active_storage/sfx/1432/1432-preview.mp3')
         };
+
+        // Set volume for all sounds
+        Object.values(this.sounds).forEach(sound => {
+            sound.volume = 0.5;
+        });
     }
 
     setupMusic() {
         this.music = new Audio('https://assets.mixkit.co/music/preview/mixkit-game-level-music-689.mp3');
         this.music.loop = true;
-        this.music.volume = 0.5;
+        this.music.volume = 0.3;
     }
 
     play(soundName) {
         if (!this.isMuted && this.sounds[soundName]) {
-            this.sounds[soundName].currentTime = 0;
-            this.sounds[soundName].play();
+            const sound = this.sounds[soundName];
+            sound.currentTime = 0;
+            
+            // Handle play() promise
+            const playPromise = sound.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    // Ignore the error if it's just about user interaction
+                    if (error.name !== 'NotAllowedError') {
+                        console.error('Error playing sound:', error);
+                    }
+                });
+            }
         }
     }
 
     playMusic() {
         if (!this.isMuted && this.music) {
-            this.music.play();
+            const playPromise = this.music.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    // Ignore the error if it's just about user interaction
+                    if (error.name !== 'NotAllowedError') {
+                        console.error('Error playing music:', error);
+                    }
+                });
+            }
         }
     }
 
@@ -1056,12 +1115,12 @@ class Game {
             // Load textures with error handling
             this.textures = {};
             const textureUrls = {
-                grass: './textures/grass.jpg',
-                dirt: './textures/dirt.png',
-                rock: './textures/rock_round.png',
-                flower: './textures/rose.png',
-                meditation: './textures/meditation.png',
-                healing: './textures/spiritual-awakening-concept.jpg'
+                grass: 'https://wigggasss.github.io/healing-and-growth-game/textures/grass.png',
+                dirt: 'https://wigggasss.github.io/healing-and-growth-game/textures/dirt.png',
+                rock: 'https://wigggasss.github.io/healing-and-growth-game/textures/rock_round.png',
+                flower: 'https://wigggasss.github.io/healing-and-growth-game/textures/rose.png',
+                meditation: 'https://wigggasss.github.io/healing-and-growth-game/textures/meditation.png',
+                healing: 'https://wigggasss.github.io/healing-and-growth-game/textures/spiritual-awakening-concept.jpg'
             };
 
             // Load textures with promises
