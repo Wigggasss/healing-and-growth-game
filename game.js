@@ -1082,6 +1082,8 @@ class GrassSystem {
         this.grassGeometry = null;
         this.grassMaterial = null;
         this.grassMesh = null;
+        this.healingRadius = 5; // Radius of healing effect
+        this.growthSpeed = 0.001; // Speed of grass growth
     }
 
     initialize(scene) {
@@ -1090,17 +1092,22 @@ class GrassSystem {
     }
 
     createGrass() {
-        // Create a single grass blade geometry
-        const bladeGeometry = new THREE.PlaneGeometry(0.1, 0.5, 1, 4);
+        // Create a 3D grass blade geometry with more detail
+        const bladeGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.5, 12);
         
-        // Create grass material with gradient
+        // Create grass material with better 3D appearance
         const grassMaterial = new THREE.MeshStandardMaterial({
-            color: 0x2ecc71,
-            side: THREE.DoubleSide,
+            color: 0x27ae60,
             roughness: 0.8,
             metalness: 0.1,
             emissive: 0x27ae60,
-            emissiveIntensity: 0.2
+            emissiveIntensity: 0.2,
+            transparent: true,
+            opacity: 0.9,
+            side: THREE.DoubleSide,
+            // Add normal map for better 3D appearance
+            normalMap: game.textures.grass,
+            normalScale: new THREE.Vector2(0.5, 0.5)
         });
 
         // Create instanced mesh for better performance
@@ -1110,7 +1117,7 @@ class GrassSystem {
             this.grassCount
         );
 
-        // Create grass instances
+        // Create grass instances with more natural distribution
         const matrix = new THREE.Matrix4();
         const color = new THREE.Color();
         const position = new THREE.Vector3();
@@ -1119,26 +1126,26 @@ class GrassSystem {
         const scale = new THREE.Vector3();
 
         for (let i = 0; i < this.grassCount; i++) {
-            // Random position
+            // Random position with better distribution
             position.x = Math.random() * 80 - 40;
             position.z = Math.random() * 80 - 40;
             position.y = 0;
 
-            // Random rotation
-            rotation.x = 0;
-            rotation.y = Math.random() * Math.PI * 2;
-            rotation.z = Math.random() * 0.2 - 0.1; // Slight tilt
+            // More natural random rotation
+            rotation.x = Math.random() * 0.3 - 0.15; // Slight tilt forward/backward
+            rotation.y = Math.random() * Math.PI * 2; // Random rotation around Y axis
+            rotation.z = Math.random() * 0.3 - 0.15; // Slight tilt left/right
 
-            // Random scale
+            // Random scale with growth property
             scale.x = 1;
-            scale.y = 0.5 + Math.random() * 0.5; // Varying heights
+            scale.y = 0.1 + Math.random() * 0.4; // Start small and grow
             scale.z = 1;
 
             // Set instance matrix
             matrix.compose(position, quaternion.setFromEuler(rotation), scale);
             this.grassMesh.setMatrixAt(i, matrix);
 
-            // Set instance color (slight variation)
+            // Set instance color with healing glow
             color.setHSL(0.3 + Math.random() * 0.05, 0.7, 0.4 + Math.random() * 0.1);
             this.grassMesh.setColorAt(i, color);
         }
@@ -1160,24 +1167,46 @@ class GrassSystem {
         const rotation = new THREE.Euler();
         const quaternion = new THREE.Quaternion();
         const scale = new THREE.Vector3();
+        const color = new THREE.Color();
+
+        // Get player position for healing effect
+        const playerPos = game.player.position;
 
         // Update each grass blade
         for (let i = 0; i < this.grassCount; i++) {
             this.grassMesh.getMatrixAt(i, matrix);
             matrix.decompose(position, quaternion, scale);
 
-            // Add wind effect
+            // Calculate distance to player
+            const distanceToPlayer = position.distanceTo(playerPos);
+
+            // Add wind effect with more natural movement
             rotation.setFromQuaternion(quaternion);
-            rotation.z = Math.sin(time + position.x) * 0.1;
+            const windStrength = Math.sin(time + position.x) * 0.1;
+            rotation.x = windStrength;
+            rotation.z = Math.cos(time + position.z) * 0.05;
             quaternion.setFromEuler(rotation);
+
+            // Growth effect based on player proximity and meditation
+            if (distanceToPlayer < this.healingRadius) {
+                // Increase growth speed when player is meditating
+                const growthMultiplier = game.isMeditating ? 2 : 1;
+                scale.y = Math.min(0.5, scale.y + this.growthSpeed * growthMultiplier);
+
+                // Add healing glow effect
+                const glowIntensity = (1 - distanceToPlayer / this.healingRadius) * 0.5;
+                color.setHSL(0.3, 0.7, 0.4 + glowIntensity);
+                this.grassMesh.setColorAt(i, color);
+            }
 
             // Rebuild matrix
             matrix.compose(position, quaternion, scale);
             this.grassMesh.setMatrixAt(i, matrix);
         }
 
-        // Update instance matrices
+        // Update instance matrices and colors
         this.grassMesh.instanceMatrix.needsUpdate = true;
+        this.grassMesh.instanceColor.needsUpdate = true;
     }
 }
 
@@ -1545,7 +1574,10 @@ class Game {
             roughness: 0.8,
             metalness: 0.2,
             wireframe: false,
-            flatShading: true
+            flatShading: true,
+            color: 0x3a7e4f,
+            emissive: 0x2d5a27,
+            emissiveIntensity: 0.2
         });
         
         // Add more natural terrain variation
@@ -1569,6 +1601,21 @@ class Game {
         this.ground.rotation.x = -Math.PI / 2;
         this.ground.receiveShadow = true;
         this.scene.add(this.ground);
+
+        // Add healing aura effect to ground
+        const auraGeometry = new THREE.PlaneGeometry(100, 100);
+        const auraMaterial = new THREE.MeshStandardMaterial({
+            color: 0x2ecc71,
+            transparent: true,
+            opacity: 0.1,
+            emissive: 0x27ae60,
+            emissiveIntensity: 0.2,
+            side: THREE.DoubleSide
+        });
+        this.groundAura = new THREE.Mesh(auraGeometry, auraMaterial);
+        this.groundAura.rotation.x = -Math.PI / 2;
+        this.groundAura.position.y = 0.01; // Slightly above ground
+        this.scene.add(this.groundAura);
     }
 
     addFlowers() {
@@ -2197,6 +2244,13 @@ class Game {
             
             if (typeof this.updateNPCs === 'function') {
                 this.updateNPCs();
+            }
+            
+            // Update ground aura effect
+            if (this.groundAura) {
+                const time = Date.now() * 0.001;
+                this.groundAura.material.opacity = 0.1 + Math.sin(time) * 0.05;
+                this.groundAura.material.emissiveIntensity = 0.2 + Math.sin(time) * 0.1;
             }
             
             // Update all game systems with proper checks
