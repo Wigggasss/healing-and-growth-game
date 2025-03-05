@@ -5,6 +5,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { VignetteShader } from 'three/addons/shaders/VignetteShader.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 // Game Systems
 class WeatherSystem {
@@ -934,11 +935,6 @@ class VegetationSystem {
         for (let i = 0; i < 20; i++) {
             this.addTree();
         }
-
-        // Generate grass
-        for (let i = 0; i < 1000; i++) {
-            this.addGrass();
-        }
     }
 
     addTree() {
@@ -974,22 +970,6 @@ class VegetationSystem {
         this.scene.add(tree);
     }
 
-    addGrass() {
-        const grass = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.05, 0.05, 0.5, 8),
-            new THREE.MeshStandardMaterial({ color: 0x2ecc71 })
-        );
-        
-        grass.position.set(
-            Math.random() * 80 - 40,
-            0.25,
-            Math.random() * 80 - 40
-        );
-        
-        this.grass.push(grass);
-        this.scene.add(grass);
-    }
-
     update() {
         // Update vegetation animations
         this.grass.forEach(blade => {
@@ -1002,8 +982,7 @@ class GrassSystem {
     constructor() {
         this.grassInstances = [];
         this.grassCount = 10000; // Number of grass blades
-        this.grassGeometry = null;
-        this.grassMaterial = null;
+        this.grassModel = null;
         this.grassMesh = null;
         this.healingRadius = 5; // Radius of healing effect
         this.growthSpeed = 0.001; // Speed of grass growth
@@ -1011,32 +990,33 @@ class GrassSystem {
 
     initialize(scene) {
         this.scene = scene;
-        this.createGrass();
+        this.loadGrassModel();
+    }
+
+    loadGrassModel() {
+        const loader = new GLTFLoader();
+        loader.load(
+            'https://wigggasss.github.io/healing-and-growth-game/models/grass.glb',
+            (gltf) => {
+                this.grassModel = gltf.scene;
+                this.createGrass();
+            },
+            (progress) => {
+                console.log(`Loading grass model: ${(progress.loaded / progress.total * 100).toFixed(2)}%`);
+            },
+            (error) => {
+                console.error('Error loading grass model:', error);
+            }
+        );
     }
 
     createGrass() {
-        // Create a 3D grass blade geometry with more detail
-        const bladeGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.5, 12);
-        
-        // Create grass material with better 3D appearance
-        const grassMaterial = new THREE.MeshStandardMaterial({
-            color: 0x27ae60,
-            roughness: 0.8,
-            metalness: 0.1,
-            emissive: 0x27ae60,
-            emissiveIntensity: 0.2,
-            transparent: true,
-            opacity: 0.9,
-            side: THREE.DoubleSide,
-            // Add normal map for better 3D appearance
-            normalMap: game.textures.grass,
-            normalScale: new THREE.Vector2(0.5, 0.5)
-        });
+        if (!this.grassModel) return;
 
         // Create instanced mesh for better performance
         this.grassMesh = new THREE.InstancedMesh(
-            bladeGeometry,
-            grassMaterial,
+            this.grassModel.children[0].geometry,
+            this.grassModel.children[0].material,
             this.grassCount
         );
 
