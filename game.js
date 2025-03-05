@@ -625,23 +625,11 @@ class EffectSystem {
 
 class SoundSystem {
     constructor() {
-        this.sounds = {};
-        this.music = null;
         this.isMuted = false;
         this.isInitialized = false;
-        this.musicSources = [
-            'https://cdn.jsdelivr.net/gh/wigggasss/healing-and-growth-game@main/audio/meditation.mp3',
-            'https://cdn.jsdelivr.net/gh/wigggasss/healing-and-growth-game@main/audio/ambient.mp3',
-            'https://cdn.jsdelivr.net/gh/wigggasss/healing-and-growth-game@main/audio/relaxation.mp3'
-        ];
-        this.currentMusicIndex = 0;
-        this.musicLoadAttempts = 0;
-        this.maxLoadAttempts = 3;
     }
 
     initialize() {
-        this.loadSounds();
-        this.setupMusic();
         this.setupMuteButton();
     }
 
@@ -651,7 +639,7 @@ class SoundSystem {
         if (!muteButton) {
             muteButton = document.createElement('button');
             muteButton.id = 'mute-button';
-            muteButton.innerHTML = '🔊';
+            muteButton.innerHTML = '🔇';
             muteButton.className = 'mute-button';
             document.body.appendChild(muteButton);
         }
@@ -678,112 +666,24 @@ class SoundSystem {
         });
     }
 
-    loadSounds() {
-        this.sounds = {
-            collect: new Audio('https://cdn.jsdelivr.net/gh/wigggasss/healing-and-growth-game@main/audio/collect.mp3'),
-            levelUp: new Audio('https://cdn.jsdelivr.net/gh/wigggasss/healing-and-growth-game@main/audio/levelup.mp3'),
-            heal: new Audio('https://cdn.jsdelivr.net/gh/wigggasss/healing-and-growth-game@main/audio/heal.mp3'),
-            energy: new Audio('https://cdn.jsdelivr.net/gh/wigggasss/healing-and-growth-game@main/audio/energy.mp3')
-        };
-
-        // Set volume for all sounds
-        Object.values(this.sounds).forEach(sound => {
-            sound.volume = 0.5;
-        });
-    }
-
-    setupMusic() {
-        this.music = new Audio();
-        this.music.loop = true;
-        this.music.volume = 0.3;
-        this.loadNextMusicSource();
-    }
-
-    loadNextMusicSource() {
-        if (this.musicSources.length === 0) {
-            console.warn('No music sources available');
-            return;
-        }
-
-        if (this.musicLoadAttempts >= this.maxLoadAttempts) {
-            console.warn('Max music load attempts reached, disabling music');
-            return;
-        }
-
-        this.music.src = this.musicSources[this.currentMusicIndex];
-        this.currentMusicIndex = (this.currentMusicIndex + 1) % this.musicSources.length;
-
-        // Add error handling for music loading
-        this.music.addEventListener('error', (e) => {
-            console.warn(`Error loading music source ${this.music.src}:`, e);
-            this.musicLoadAttempts++;
-            
-            if (this.musicLoadAttempts < this.maxLoadAttempts) {
-                console.log(`Attempting to load next music source (attempt ${this.musicLoadAttempts + 1}/${this.maxLoadAttempts})`);
-                this.loadNextMusicSource();
-            } else {
-                console.warn('All music sources failed to load');
-            }
-        });
-
-        // Add success handler
-        this.music.addEventListener('canplaythrough', () => {
-            console.log('Music loaded successfully');
-            this.musicLoadAttempts = 0;
-        });
-    }
-
     play(soundName) {
-        if (!this.isMuted && this.sounds[soundName]) {
-            const sound = this.sounds[soundName];
-            sound.currentTime = 0;
-            
-            const playPromise = sound.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                    if (error.name !== 'NotAllowedError') {
-                        console.error('Error playing sound:', error);
-                    }
-                });
-            }
-        }
+        // Do nothing
     }
 
     playMusic() {
-        if (!this.isMuted && this.music) {
-            const playPromise = this.music.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                    if (error.name === 'NotSupportedError') {
-                        console.warn('Current music source not supported, trying next source');
-                        this.loadNextMusicSource();
-                        this.playMusic(); // Try playing with new source
-                    } else if (error.name !== 'NotAllowedError') {
-                        console.error('Error playing music:', error);
-                    }
-                });
-            }
-        }
+        // Do nothing
     }
 
     stopMusic() {
-        if (this.music) {
-            this.music.pause();
-            this.music.currentTime = 0;
-        }
+        // Do nothing
     }
 
     toggleMute() {
         this.isMuted = !this.isMuted;
-        if (this.isMuted) {
-            this.stopMusic();
-        } else {
-            this.playMusic();
-        }
     }
 
     update() {
-        // Update sound system state
+        // Do nothing
     }
 }
 
