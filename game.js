@@ -1046,7 +1046,12 @@ class GrassSystem {
     }
 
     createGrass() {
-        if (!this.grassModel) return;
+        if (!this.grassModel) {
+            console.error('Grass model not loaded');
+            return;
+        }
+
+        console.log('Creating grass with model:', this.grassModel);
 
         // Create instanced mesh for better performance
         this.grassMesh = new THREE.InstancedMesh(
@@ -1067,24 +1072,24 @@ class GrassSystem {
             // Random position with better distribution
             position.x = Math.random() * 80 - 40;
             position.z = Math.random() * 80 - 40;
-            position.y = 0;
+            position.y = 0.1; // Slightly above ground to prevent z-fighting
 
             // More natural random rotation
             rotation.x = Math.random() * 0.3 - 0.15; // Slight tilt forward/backward
             rotation.y = Math.random() * Math.PI * 2; // Random rotation around Y axis
             rotation.z = Math.random() * 0.3 - 0.15; // Slight tilt left/right
 
-            // Random scale with growth property
-            scale.x = 1;
-            scale.y = 0.1 + Math.random() * 0.4; // Start small and grow
-            scale.z = 1;
+            // Increased scale for better visibility
+            scale.x = 2; // Wider grass blades
+            scale.y = 1 + Math.random() * 1.5; // Taller grass (1-2.5 units)
+            scale.z = 2; // Deeper grass blades
 
             // Set instance matrix
             matrix.compose(position, quaternion.setFromEuler(rotation), scale);
             this.grassMesh.setMatrixAt(i, matrix);
 
-            // Set instance color with healing glow
-            color.setHSL(0.3 + Math.random() * 0.05, 0.7, 0.4 + Math.random() * 0.1);
+            // Brighter, more visible colors
+            color.setHSL(0.3 + Math.random() * 0.05, 0.8, 0.5 + Math.random() * 0.2);
             this.grassMesh.setColorAt(i, color);
         }
 
@@ -1094,6 +1099,7 @@ class GrassSystem {
 
         // Add grass to scene
         this.scene.add(this.grassMesh);
+        console.log('Grass mesh added to scene:', this.grassMesh);
     }
 
     update() {
@@ -1115,6 +1121,9 @@ class GrassSystem {
             this.grassMesh.getMatrixAt(i, matrix);
             matrix.decompose(position, quaternion, scale);
 
+            // Ensure grass stays above ground
+            position.y = Math.max(0.1, position.y);
+
             // Calculate distance to player
             const distanceToPlayer = position.distanceTo(playerPos);
 
@@ -1129,11 +1138,11 @@ class GrassSystem {
             if (distanceToPlayer < this.healingRadius) {
                 // Increase growth speed when player is meditating
                 const growthMultiplier = game.isMeditating ? 2 : 1;
-                scale.y = Math.min(0.5, scale.y + this.growthSpeed * growthMultiplier);
+                scale.y = Math.min(2.5, scale.y + this.growthSpeed * growthMultiplier);
 
                 // Add healing glow effect
                 const glowIntensity = (1 - distanceToPlayer / this.healingRadius) * 0.5;
-                color.setHSL(0.3, 0.7, 0.4 + glowIntensity);
+                color.setHSL(0.3, 0.8, 0.5 + glowIntensity);
                 this.grassMesh.setColorAt(i, color);
             }
 
@@ -1212,7 +1221,7 @@ class Game {
             // Load textures with error handling
             this.textures = {};
             const textureUrls = {
-
+                grass: 'https://wigggasss.github.io/healing-and-growth-game/textures/grass.png',
                 dirt: 'https://wigggasss.github.io/healing-and-growth-game/textures/dirt.png',
                 rock: 'https://wigggasss.github.io/healing-and-growth-game/textures/rock_round.png',
                 flower: 'https://wigggasss.github.io/healing-and-growth-game/textures/rose.png',
