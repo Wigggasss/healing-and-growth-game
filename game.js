@@ -630,11 +630,13 @@ class SoundSystem {
         this.isMuted = false;
         this.isInitialized = false;
         this.musicSources = [
-            'https://assets.mixkit.co/music/preview/mixkit-game-level-music-689.mp3',
-            'https://assets.mixkit.co/music/preview/mixkit-spirit-of-the-alps-132.mp3',
-            'https://assets.mixkit.co/music/preview/mixkit-serene-view-132.mp3'
+            'https://cdn.jsdelivr.net/gh/wigggasss/healing-and-growth-game@main/audio/meditation.mp3',
+            'https://cdn.jsdelivr.net/gh/wigggasss/healing-and-growth-game@main/audio/ambient.mp3',
+            'https://cdn.jsdelivr.net/gh/wigggasss/healing-and-growth-game@main/audio/relaxation.mp3'
         ];
         this.currentMusicIndex = 0;
+        this.musicLoadAttempts = 0;
+        this.maxLoadAttempts = 3;
     }
 
     initialize() {
@@ -678,10 +680,10 @@ class SoundSystem {
 
     loadSounds() {
         this.sounds = {
-            collect: new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3'),
-            levelUp: new Audio('https://assets.mixkit.co/active_storage/sfx/1434/1434-preview.mp3'),
-            heal: new Audio('https://assets.mixkit.co/active_storage/sfx/1433/1433-preview.mp3'),
-            energy: new Audio('https://assets.mixkit.co/active_storage/sfx/1432/1432-preview.mp3')
+            collect: new Audio('https://cdn.jsdelivr.net/gh/wigggasss/healing-and-growth-game@main/audio/collect.mp3'),
+            levelUp: new Audio('https://cdn.jsdelivr.net/gh/wigggasss/healing-and-growth-game@main/audio/levelup.mp3'),
+            heal: new Audio('https://cdn.jsdelivr.net/gh/wigggasss/healing-and-growth-game@main/audio/heal.mp3'),
+            energy: new Audio('https://cdn.jsdelivr.net/gh/wigggasss/healing-and-growth-game@main/audio/energy.mp3')
         };
 
         // Set volume for all sounds
@@ -698,7 +700,15 @@ class SoundSystem {
     }
 
     loadNextMusicSource() {
-        if (this.musicSources.length === 0) return;
+        if (this.musicSources.length === 0) {
+            console.warn('No music sources available');
+            return;
+        }
+
+        if (this.musicLoadAttempts >= this.maxLoadAttempts) {
+            console.warn('Max music load attempts reached, disabling music');
+            return;
+        }
 
         this.music.src = this.musicSources[this.currentMusicIndex];
         this.currentMusicIndex = (this.currentMusicIndex + 1) % this.musicSources.length;
@@ -706,7 +716,20 @@ class SoundSystem {
         // Add error handling for music loading
         this.music.addEventListener('error', (e) => {
             console.warn(`Error loading music source ${this.music.src}:`, e);
-            this.loadNextMusicSource(); // Try next source
+            this.musicLoadAttempts++;
+            
+            if (this.musicLoadAttempts < this.maxLoadAttempts) {
+                console.log(`Attempting to load next music source (attempt ${this.musicLoadAttempts + 1}/${this.maxLoadAttempts})`);
+                this.loadNextMusicSource();
+            } else {
+                console.warn('All music sources failed to load');
+            }
+        });
+
+        // Add success handler
+        this.music.addEventListener('canplaythrough', () => {
+            console.log('Music loaded successfully');
+            this.musicLoadAttempts = 0;
         });
     }
 
