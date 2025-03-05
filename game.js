@@ -2125,35 +2125,95 @@ class Game {
     animate() {
         // Only proceed with animation if game is initialized
         if (!this.isInitialized) {
+            console.log('Game not yet initialized, skipping animation frame');
             return;
         }
 
         requestAnimationFrame(() => this.animate());
         
-        // Update game state
-        this.movePlayer();
-        this.updateCamera();
-        this.updateHealingZones();
-        this.updateMeditationSpots();
-        this.updateFlowers();
-        this.updateNPCs();
-        
-        // Update grass system if it exists
-        if (this.grass && this.grass.update) {
-            this.grass.update();
-        }
-        
-        // Energy management
-        if (!this.isMeditating) {
-            this.energy = Math.max(0, this.energy - 0.01);
-            const energyFill = document.querySelector('#energy-fill');
-            if (energyFill) {
-                energyFill.style.width = this.energy + '%';
+        try {
+            // Update game state with proper checks
+            if (typeof this.movePlayer === 'function') {
+                this.movePlayer();
             }
+            
+            if (typeof this.updateCamera === 'function') {
+                this.updateCamera();
+            }
+            
+            if (typeof this.updateHealingZones === 'function') {
+                this.updateHealingZones();
+            }
+            
+            if (typeof this.updateMeditationSpots === 'function') {
+                this.updateMeditationSpots();
+            }
+            
+            if (typeof this.updateFlowers === 'function') {
+                this.updateFlowers();
+            }
+            
+            if (typeof this.updateNPCs === 'function') {
+                this.updateNPCs();
+            }
+            
+            // Update all game systems with proper checks
+            if (this.weather && typeof this.weather.update === 'function') {
+                this.weather.update();
+            }
+            
+            if (this.dayNightCycle && typeof this.dayNightCycle.update === 'function') {
+                this.dayNightCycle.update();
+            }
+            
+            if (this.effects && typeof this.effects.update === 'function') {
+                this.effects.update();
+            }
+            
+            if (this.animations && typeof this.animations.update === 'function') {
+                this.animations.update();
+            }
+            
+            if (this.collisions && typeof this.collisions.update === 'function') {
+                this.collisions.update();
+            }
+            
+            if (this.pathfinding && typeof this.pathfinding.update === 'function') {
+                this.pathfinding.update();
+            }
+            
+            if (this.terrain && typeof this.terrain.update === 'function') {
+                this.terrain.update();
+            }
+            
+            if (this.vegetation && typeof this.vegetation.update === 'function') {
+                this.vegetation.update();
+            }
+            
+            if (this.grass && typeof this.grass.update === 'function') {
+                this.grass.update();
+            }
+            
+            // Energy management with proper checks
+            if (!this.isMeditating) {
+                this.energy = Math.max(0, this.energy - 0.01);
+                const energyFill = document.querySelector('#energy-fill');
+                if (energyFill) {
+                    energyFill.style.width = this.energy + '%';
+                }
+            }
+            
+            // Render scene with proper checks
+            if (this.renderer && this.scene && this.camera) {
+                this.renderer.render(this.scene, this.camera);
+            } else {
+                console.warn('Renderer, scene, or camera not properly initialized');
+            }
+        } catch (error) {
+            console.error('Error in animation loop:', error);
+            // Optionally stop the animation loop if there's a critical error
+            // this.isInitialized = false;
         }
-        
-        // Render scene
-        this.renderer.render(this.scene, this.camera);
     }
 }
 
