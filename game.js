@@ -629,6 +629,12 @@ class SoundSystem {
         this.music = null;
         this.isMuted = false;
         this.isInitialized = false;
+        this.musicSources = [
+            'https://assets.mixkit.co/music/preview/mixkit-game-level-music-689.mp3',
+            'https://assets.mixkit.co/music/preview/mixkit-spirit-of-the-alps-132.mp3',
+            'https://assets.mixkit.co/music/preview/mixkit-serene-view-132.mp3'
+        ];
+        this.currentMusicIndex = 0;
     }
 
     initialize() {
@@ -685,9 +691,23 @@ class SoundSystem {
     }
 
     setupMusic() {
-        this.music = new Audio('https://assets.mixkit.co/music/preview/mixkit-game-level-music-689.mp3');
+        this.music = new Audio();
         this.music.loop = true;
         this.music.volume = 0.3;
+        this.loadNextMusicSource();
+    }
+
+    loadNextMusicSource() {
+        if (this.musicSources.length === 0) return;
+
+        this.music.src = this.musicSources[this.currentMusicIndex];
+        this.currentMusicIndex = (this.currentMusicIndex + 1) % this.musicSources.length;
+
+        // Add error handling for music loading
+        this.music.addEventListener('error', (e) => {
+            console.warn(`Error loading music source ${this.music.src}:`, e);
+            this.loadNextMusicSource(); // Try next source
+        });
     }
 
     play(soundName) {
@@ -695,11 +715,9 @@ class SoundSystem {
             const sound = this.sounds[soundName];
             sound.currentTime = 0;
             
-            // Handle play() promise
             const playPromise = sound.play();
             if (playPromise !== undefined) {
                 playPromise.catch(error => {
-                    // Ignore the error if it's just about user interaction
                     if (error.name !== 'NotAllowedError') {
                         console.error('Error playing sound:', error);
                     }
@@ -713,8 +731,11 @@ class SoundSystem {
             const playPromise = this.music.play();
             if (playPromise !== undefined) {
                 playPromise.catch(error => {
-                    // Ignore the error if it's just about user interaction
-                    if (error.name !== 'NotAllowedError') {
+                    if (error.name === 'NotSupportedError') {
+                        console.warn('Current music source not supported, trying next source');
+                        this.loadNextMusicSource();
+                        this.playMusic(); // Try playing with new source
+                    } else if (error.name !== 'NotAllowedError') {
                         console.error('Error playing music:', error);
                     }
                 });
@@ -1442,14 +1463,15 @@ class Game {
     setupInputs() {
         this.keys = {};
         this.mousePosition = new THREE.Vector2();
+        this.isPointerLocked = false;
         
         // Keyboard controls
         document.addEventListener('keydown', (e) => this.keys[e.key.toLowerCase()] = true);
         document.addEventListener('keyup', (e) => this.keys[e.key.toLowerCase()] = false);
         
-        // Mouse controls
+        // Mouse controls with improved pointer lock
         document.addEventListener('mousemove', (e) => {
-            if (document.pointerLockElement === this.renderer.domElement) {
+            if (this.isPointerLocked) {
                 this.player.rotation.y -= e.movementX * 0.002;
                 this.camera.rotation.x = THREE.MathUtils.clamp(
                     this.camera.rotation.x - e.movementY * 0.002,
@@ -1459,10 +1481,30 @@ class Game {
             }
         });
 
+        // Improved pointer lock handling
+        document.addEventListener('pointerlockchange', () => {
+            this.isPointerLocked = document.pointerLockElement === this.renderer.domElement;
+        });
+
+        // Handle pointer lock errors
+        document.addEventListener('pointerlockerror', () => {
+            console.warn('Pointer lock error occurred');
+            this.isPointerLocked = false;
+        });
+
         // Lock pointer for better mouse control
         this.renderer.domElement.addEventListener('click', () => {
-            if (document.pointerLockElement !== this.renderer.domElement) {
-                this.renderer.domElement.requestPointerLock();
+            if (!this.isPointerLocked) {
+                this.renderer.domElement.requestPointerLock().catch(error => {
+                    console.warn('Pointer lock request failed:', error);
+                });
+            }
+        });
+
+        // Add escape key handler to exit pointer lock
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.isPointerLocked) {
+                document.exitPointerLock();
             }
         });
     }
