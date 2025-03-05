@@ -996,7 +996,7 @@ class GrassSystem {
     loadGrassModel() {
         const loader = new GLTFLoader();
         loader.load(
-            'https://wigggasss.github.io/healing-and-growth-game/models/grass(1).glb',
+            'https://wigggasss.github.io/healing-and-growth-game/models/grass (1).glb',
             (gltf) => {
                 this.grassModel = gltf.scene;
                 this.createGrass();
