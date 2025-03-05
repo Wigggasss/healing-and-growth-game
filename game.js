@@ -1282,7 +1282,8 @@ class Game {
                         loadingScreen.style.display = 'none';
                     }
                     
-                    // Start animation loop
+                    // Start animation loop only after everything is initialized
+                    this.isInitialized = true;
                     this.animate();
                 })
                 .catch(error => {
@@ -2122,6 +2123,11 @@ class Game {
     }
 
     animate() {
+        // Only proceed with animation if game is initialized
+        if (!this.isInitialized) {
+            return;
+        }
+
         requestAnimationFrame(() => this.animate());
         
         // Update game state
@@ -2133,7 +2139,7 @@ class Game {
         this.updateNPCs();
         
         // Update grass system if it exists
-        if (this.grass) {
+        if (this.grass && this.grass.update) {
             this.grass.update();
         }
         
