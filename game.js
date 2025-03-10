@@ -995,41 +995,55 @@ class GrassSystem {
 
     loadGrassModel() {
         const loader = new GLTFLoader();
+        console.log('Starting to load grass model...');
+        
         loader.load(
             'https://wigggasss.github.io/healing-and-growth-game/models/grass(1).glb',
             (gltf) => {
                 console.log('Grass model loaded successfully');
-                // Convert materials to standard Three.js materials
-                gltf.scene.traverse((node) => {
-                    if (node.isMesh) {
-                        // Create a new standard material
-                        const newMaterial = new THREE.MeshStandardMaterial({
-                            color: 0x3a7e4f, // Green color for grass
-                            roughness: 0.8,
-                            metalness: 0.2,
-                            emissive: 0x2d5a27,
-                            emissiveIntensity: 0.2
-                        });
-                        node.material = newMaterial;
-                    }
-                });
-                
-                this.grassModel = gltf.scene;
-                this.createGrass();
+                try {
+                    // Convert materials to standard Three.js materials
+                    gltf.scene.traverse((node) => {
+                        if (node.isMesh) {
+                            console.log('Found mesh:', node.name);
+                            // Create a new standard material
+                            const newMaterial = new THREE.MeshStandardMaterial({
+                                color: 0x3a7e4f, // Green color for grass
+                                roughness: 0.8,
+                                metalness: 0.2,
+                                emissive: 0x2d5a27,
+                                emissiveIntensity: 0.2
+                            });
+                            node.material = newMaterial;
+                        }
+                    });
+                    
+                    this.grassModel = gltf.scene;
+                    this.createGrass();
+                } catch (error) {
+                    console.error('Error processing grass model:', error);
+                    this.createFallbackGrass();
+                }
             },
             (progress) => {
                 console.log(`Loading grass model: ${(progress.loaded / progress.total * 100).toFixed(2)}%`);
+                console.log(`Loaded: ${progress.loaded} bytes, Total: ${progress.total} bytes`);
             },
             (error) => {
                 console.error('Error loading grass model:', error);
+                console.error('Error details:', {
+                    message: error.message,
+                    stack: error.stack,
+                    type: error.constructor.name
+                });
                 console.log('Falling back to simple grass geometry');
-                // Fallback to simple grass geometry if model fails to load
                 this.createFallbackGrass();
             }
         );
     }
 
     createFallbackGrass() {
+        console.log('Creating fallback grass geometry');
         // Create a simple grass blade geometry as fallback
         const grassGeometry = new THREE.CylinderGeometry(0.05, 0.05, 0.5, 8);
         const grassMaterial = new THREE.MeshStandardMaterial({
@@ -1512,8 +1526,8 @@ class Game {
     }
 
     addGround() {
-        // Create a more natural-looking ground with better textures
-        const groundGeometry = new THREE.PlaneGeometry(100, 100, 50, 50);
+        // Create a larger ground plane
+        const groundGeometry = new THREE.PlaneGeometry(200, 200, 100, 100);
         
         // Create a material with multiple textures
         const groundMaterial = new THREE.MeshStandardMaterial({ 
@@ -1529,7 +1543,7 @@ class Game {
             emissiveIntensity: 0.2
         });
         
-        // Add more natural terrain variation
+        // Add more natural terrain variation for larger world
         const vertices = groundGeometry.attributes.position.array;
         for (let i = 0; i < vertices.length; i += 3) {
             if (i !== 0) {
@@ -1537,9 +1551,9 @@ class Game {
                 const z = vertices[i + 2];
                 // Create more interesting terrain using multiple sine waves
                 vertices[i + 1] = 
-                    Math.sin(x * 0.1) * 0.5 + 
-                    Math.cos(z * 0.1) * 0.5 +
-                    Math.sin((x + z) * 0.05) * 0.3;
+                    Math.sin(x * 0.05) * 1.0 + 
+                    Math.cos(z * 0.05) * 1.0 +
+                    Math.sin((x + z) * 0.025) * 0.6;
             }
         }
         
@@ -1552,7 +1566,7 @@ class Game {
         this.scene.add(this.ground);
 
         // Add healing aura effect to ground
-        const auraGeometry = new THREE.PlaneGeometry(100, 100);
+        const auraGeometry = new THREE.PlaneGeometry(200, 200);
         const auraMaterial = new THREE.MeshStandardMaterial({
             color: 0x2ecc71,
             transparent: true,
@@ -1568,8 +1582,8 @@ class Game {
     }
 
     addFlowers() {
-        // Create flowers that grow and bloom
-        for (let i = 0; i < 50; i++) {
+        // Create more flowers for larger world
+        for (let i = 0; i < 100; i++) {
             const flower = new THREE.Group();
             
             // Stem with better material
@@ -1607,9 +1621,9 @@ class Game {
             flower.add(stem);
             flower.add(petals);
             
-            // Random position on ground
-            const x = Math.random() * 80 - 40;
-            const z = Math.random() * 80 - 40;
+            // Random position on larger ground
+            const x = Math.random() * 160 - 80;
+            const z = Math.random() * 160 - 80;
             flower.position.set(x, 0, z);
             
             // Add growth animation properties
@@ -1729,8 +1743,8 @@ class Game {
     addHealingZones() {
         this.healingZones = [];
         
-        // Create sacred healing zones
-        for (let i = 0; i < 5; i++) {
+        // Create more healing zones for larger world
+        for (let i = 0; i < 10; i++) {
             const zoneGeometry = new THREE.CylinderGeometry(2, 2, 0.1, 32);
             const zoneMaterial = new THREE.MeshStandardMaterial({
                 map: this.textures.healing,
@@ -1743,9 +1757,9 @@ class Game {
             
             const zone = new THREE.Mesh(zoneGeometry, zoneMaterial);
             zone.position.set(
-                Math.random() * 80 - 40,
+                Math.random() * 160 - 80,
                 0.05,
-                Math.random() * 80 - 40
+                Math.random() * 160 - 80
             );
             
             this.healingZones.push(zone);
@@ -1783,11 +1797,11 @@ class Game {
     addNPCs() {
         this.npcs = [];
         
-        // Create several NPCs
-        for (let i = 0; i < 5; i++) {
+        // Create more NPCs for larger world
+        for (let i = 0; i < 10; i++) {
             const npc = new THREE.Group();
             
-            // NPC body (using cylinder instead of capsule)
+            // NPC body
             const bodyGeometry = new THREE.CylinderGeometry(0.5, 0.5, 2, 8);
             const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
             const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
@@ -1804,11 +1818,11 @@ class Game {
             npc.add(body);
             npc.add(head);
             
-            // Position NPC
+            // Position NPC in larger world
             npc.position.set(
-                Math.random() * 80 - 40,
+                Math.random() * 160 - 80,
                 0,
-                Math.random() * 80 - 40
+                Math.random() * 160 - 80
             );
             
             this.npcs.push(npc);
@@ -1857,8 +1871,8 @@ class Game {
             npc.position.z += Math.cos(time + npc.position.x) * 0.02;
             
             // Keep NPCs within bounds
-            npc.position.x = THREE.MathUtils.clamp(npc.position.x, -40, 40);
-            npc.position.z = THREE.MathUtils.clamp(npc.position.z, -40, 40);
+            npc.position.x = THREE.MathUtils.clamp(npc.position.x, -80, 80);
+            npc.position.z = THREE.MathUtils.clamp(npc.position.z, -80, 80);
             
             // Make NPCs face their movement direction
             npc.rotation.y = Math.atan2(
@@ -1900,7 +1914,7 @@ class Game {
         cameraDirection.normalize();
         
         const sideDirection = new THREE.Vector3(
-            -cameraDirection.z, // Fixed A/D movement
+            -cameraDirection.z,
             0,
             cameraDirection.x
         );
@@ -1940,9 +1954,9 @@ class Game {
             this.isJumping = false;
         }
         
-        // Keep player within bounds
-        this.player.position.x = THREE.MathUtils.clamp(this.player.position.x, -40, 40);
-        this.player.position.z = THREE.MathUtils.clamp(this.player.position.z, -40, 40);
+        // Keep player within larger bounds
+        this.player.position.x = THREE.MathUtils.clamp(this.player.position.x, -80, 80);
+        this.player.position.z = THREE.MathUtils.clamp(this.player.position.z, -80, 80);
 
         // Update aura effect
         if (this.player.aura) {
@@ -1976,7 +1990,8 @@ class Game {
     addMeditationSpots() {
         this.meditationSpots = [];
         
-        for (let i = 0; i < 3; i++) {
+        // Create more meditation spots for larger world
+        for (let i = 0; i < 6; i++) {
             const spot = new THREE.Group();
             
             // Create a sacred meditation platform
@@ -2040,10 +2055,11 @@ class Game {
             spot.add(particles);
             spot.particles = particles;
             
+            // Random position on larger ground
             spot.position.set(
-                Math.random() * 60 - 30,
+                Math.random() * 120 - 60,
                 0.1,
-                Math.random() * 60 - 30
+                Math.random() * 120 - 60
             );
             
             this.meditationSpots.push(spot);
