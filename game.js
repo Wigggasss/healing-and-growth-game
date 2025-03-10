@@ -6,7 +6,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { VignetteShader } from 'three/addons/shaders/VignetteShader.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { BufferGeometryUtils } from 'three/addons/utils/BufferGeometryUtils.js';
+import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 
 // Game Systems
 class WeatherSystem {
@@ -1118,7 +1118,7 @@ class GrassSystem {
             try {
                 // Create a combined geometry from all meshes with this material
                 const geometries = group.meshes.map(mesh => mesh.geometry);
-                const combinedGeometry = BufferGeometryUtils.mergeBufferGeometries(geometries);
+                const combinedGeometry = BufferGeometryUtils.mergeGeometries(geometries);
                 
                 // Create instanced mesh
                 const instancedMesh = new THREE.InstancedMesh(
