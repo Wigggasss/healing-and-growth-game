@@ -1082,76 +1082,109 @@ class GrassSystem {
 
         console.log('Creating grass instances from 3D model');
         
-        // Create instanced mesh using the loaded model's geometry and material
-        const firstMesh = this.grassModel.children[0];
-        if (!firstMesh || !firstMesh.geometry || !firstMesh.material) {
-            console.error('Invalid grass model structure');
+        // Create a group to hold all grass instances
+        this.grassGroup = new THREE.Group();
+        
+        // Get all meshes from the model
+        const meshes = [];
+        this.grassModel.traverse((node) => {
+            if (node.isMesh) {
+                meshes.push(node);
+            }
+        });
+
+        if (meshes.length === 0) {
+            console.error('No meshes found in grass model');
             this.createFallbackGrass();
             return;
         }
 
-        this.grassMesh = new THREE.InstancedMesh(
-            firstMesh.geometry,
-            firstMesh.material,
-            this.grassCount
-        );
-
-        // Create grass instances with natural distribution
-        const matrix = new THREE.Matrix4();
-        const color = new THREE.Color();
-        const position = new THREE.Vector3();
-        const rotation = new THREE.Euler();
-        const quaternion = new THREE.Quaternion();
-        const scale = new THREE.Vector3();
-
-        // Create clusters of grass for more natural distribution
-        const clusterCount = Math.floor(this.grassCount / 100); // 100 blades per cluster
-        for (let cluster = 0; cluster < clusterCount; cluster++) {
-            // Center of the cluster
-            const clusterX = Math.random() * 160 - 80;
-            const clusterZ = Math.random() * 160 - 80;
-            
-            // Create 100 blades in this cluster
-            for (let i = 0; i < 100; i++) {
-                const index = cluster * 100 + i;
-                if (index >= this.grassCount) break;
-
-                // Random position within cluster radius
-                const angle = Math.random() * Math.PI * 2;
-                const radius = Math.random() * 2; // 2 unit radius for each cluster
-                position.x = clusterX + Math.cos(angle) * radius;
-                position.z = clusterZ + Math.sin(angle) * radius;
-                position.y = 0.1; // Slightly above ground
-
-                // Natural random rotation
-                rotation.x = Math.random() * 0.3 - 0.15; // Slight tilt forward/backward
-                rotation.y = Math.random() * Math.PI * 2; // Random rotation around Y axis
-                rotation.z = Math.random() * 0.3 - 0.15; // Slight tilt left/right
-
-                // Varying heights for more natural look
-                const height = 0.6 + Math.random() * 0.4; // Height between 0.6 and 1.0
-                scale.set(1, height, 1);
-
-                // Set instance matrix
-                matrix.compose(position, quaternion.setFromEuler(rotation), scale);
-                this.grassMesh.setMatrixAt(index, matrix);
-
-                // Slightly varying colors for more natural look
-                const hue = 0.3 + Math.random() * 0.05; // Green hue with slight variation
-                const saturation = 0.7 + Math.random() * 0.1; // Saturation variation
-                const lightness = 0.4 + Math.random() * 0.1; // Lightness variation
-                color.setHSL(hue, saturation, lightness);
-                this.grassMesh.setColorAt(index, color);
+        // Create instanced meshes for each unique material
+        const materialGroups = new Map();
+        meshes.forEach(mesh => {
+            const materialKey = mesh.material.uuid;
+            if (!materialGroups.has(materialKey)) {
+                materialGroups.set(materialKey, {
+                    material: mesh.material,
+                    meshes: []
+                });
             }
-        }
+            materialGroups.get(materialKey).meshes.push(mesh);
+        });
 
-        // Update instance matrices and colors
-        this.grassMesh.instanceMatrix.needsUpdate = true;
-        this.grassMesh.instanceColor.needsUpdate = true;
+        // Create instanced meshes for each material group
+        materialGroups.forEach((group, materialKey) => {
+            // Create a combined geometry from all meshes with this material
+            const geometries = group.meshes.map(mesh => mesh.geometry);
+            const combinedGeometry = THREE.BufferGeometryUtils.mergeBufferGeometries(geometries);
+            
+            // Create instanced mesh
+            const instancedMesh = new THREE.InstancedMesh(
+                combinedGeometry,
+                group.material,
+                this.grassCount
+            );
 
-        // Add grass to scene
-        this.scene.add(this.grassMesh);
-        console.log('3D grass mesh added to scene:', this.grassMesh);
+            // Create grass instances with natural distribution
+            const matrix = new THREE.Matrix4();
+            const color = new THREE.Color();
+            const position = new THREE.Vector3();
+            const rotation = new THREE.Euler();
+            const quaternion = new THREE.Quaternion();
+            const scale = new THREE.Vector3();
+
+            // Create clusters of grass for more natural distribution
+            const clusterCount = Math.floor(this.grassCount / 100); // 100 blades per cluster
+            for (let cluster = 0; cluster < clusterCount; cluster++) {
+                // Center of the cluster
+                const clusterX = Math.random() * 160 - 80;
+                const clusterZ = Math.random() * 160 - 80;
+                
+                // Create 100 blades in this cluster
+                for (let i = 0; i < 100; i++) {
+                    const index = cluster * 100 + i;
+                    if (index >= this.grassCount) break;
+
+                    // Random position within cluster radius
+                    const angle = Math.random() * Math.PI * 2;
+                    const radius = Math.random() * 2; // 2 unit radius for each cluster
+                    position.x = clusterX + Math.cos(angle) * radius;
+                    position.z = clusterZ + Math.sin(angle) * radius;
+                    position.y = 0.1; // Slightly above ground
+
+                    // Natural random rotation
+                    rotation.x = Math.random() * 0.3 - 0.15; // Slight tilt forward/backward
+                    rotation.y = Math.random() * Math.PI * 2; // Random rotation around Y axis
+                    rotation.z = Math.random() * 0.3 - 0.15; // Slight tilt left/right
+
+                    // Varying heights for more natural look
+                    const height = 0.6 + Math.random() * 0.4; // Height between 0.6 and 1.0
+                    scale.set(1, height, 1);
+
+                    // Set instance matrix
+                    matrix.compose(position, quaternion.setFromEuler(rotation), scale);
+                    instancedMesh.setMatrixAt(index, matrix);
+
+                    // Slightly varying colors for more natural look
+                    const hue = 0.3 + Math.random() * 0.05; // Green hue with slight variation
+                    const saturation = 0.7 + Math.random() * 0.1; // Saturation variation
+                    const lightness = 0.4 + Math.random() * 0.1; // Lightness variation
+                    color.setHSL(hue, saturation, lightness);
+                    instancedMesh.setColorAt(index, color);
+                }
+            }
+
+            // Update instance matrices and colors
+            instancedMesh.instanceMatrix.needsUpdate = true;
+            instancedMesh.instanceColor.needsUpdate = true;
+
+            // Add to grass group
+            this.grassGroup.add(instancedMesh);
+        });
+
+        // Add grass group to scene
+        this.scene.add(this.grassGroup);
+        console.log('3D grass group added to scene:', this.grassGroup);
     }
 
     createFallbackGrass() {
@@ -1160,7 +1193,7 @@ class GrassSystem {
     }
 
     update() {
-        if (!this.grassMesh) return;
+        if (!this.grassGroup) return;
 
         const time = Date.now() * 0.001;
         const matrix = new THREE.Matrix4();
@@ -1173,44 +1206,47 @@ class GrassSystem {
         // Get player position for healing effect
         const playerPos = game.player.position;
 
-        // Update each grass blade
-        for (let i = 0; i < this.grassCount; i++) {
-            this.grassMesh.getMatrixAt(i, matrix);
-            matrix.decompose(position, quaternion, scale);
+        // Update each instanced mesh in the group
+        this.grassGroup.children.forEach(instancedMesh => {
+            // Update each grass blade
+            for (let i = 0; i < this.grassCount; i++) {
+                instancedMesh.getMatrixAt(i, matrix);
+                matrix.decompose(position, quaternion, scale);
 
-            // Ensure grass stays above ground
-            position.y = Math.max(0.1, position.y);
+                // Ensure grass stays above ground
+                position.y = Math.max(0.1, position.y);
 
-            // Calculate distance to player
-            const distanceToPlayer = position.distanceTo(playerPos);
+                // Calculate distance to player
+                const distanceToPlayer = position.distanceTo(playerPos);
 
-            // Add wind effect with more natural movement
-            rotation.setFromQuaternion(quaternion);
-            const windStrength = Math.sin(time + position.x) * 0.1;
-            rotation.x = windStrength;
-            rotation.z = Math.cos(time + position.z) * 0.05;
-            quaternion.setFromEuler(rotation);
+                // Add wind effect with more natural movement
+                rotation.setFromQuaternion(quaternion);
+                const windStrength = Math.sin(time + position.x) * 0.1;
+                rotation.x = windStrength;
+                rotation.z = Math.cos(time + position.z) * 0.05;
+                quaternion.setFromEuler(rotation);
 
-            // Growth effect based on player proximity and meditation
-            if (distanceToPlayer < this.healingRadius) {
-                // Increase growth speed when player is meditating
-                const growthMultiplier = game.isMeditating ? 2 : 1;
-                scale.y = Math.min(1.2, scale.y + this.growthSpeed * growthMultiplier);
+                // Growth effect based on player proximity and meditation
+                if (distanceToPlayer < this.healingRadius) {
+                    // Increase growth speed when player is meditating
+                    const growthMultiplier = game.isMeditating ? 2 : 1;
+                    scale.y = Math.min(1.2, scale.y + this.growthSpeed * growthMultiplier);
 
-                // Add healing glow effect
-                const glowIntensity = (1 - distanceToPlayer / this.healingRadius) * 0.5;
-                color.setHSL(0.3, 0.8, 0.5 + glowIntensity);
-                this.grassMesh.setColorAt(i, color);
+                    // Add healing glow effect
+                    const glowIntensity = (1 - distanceToPlayer / this.healingRadius) * 0.5;
+                    color.setHSL(0.3, 0.8, 0.5 + glowIntensity);
+                    instancedMesh.setColorAt(i, color);
+                }
+
+                // Rebuild matrix
+                matrix.compose(position, quaternion, scale);
+                instancedMesh.setMatrixAt(i, matrix);
             }
 
-            // Rebuild matrix
-            matrix.compose(position, quaternion, scale);
-            this.grassMesh.setMatrixAt(i, matrix);
-        }
-
-        // Update instance matrices and colors
-        this.grassMesh.instanceMatrix.needsUpdate = true;
-        this.grassMesh.instanceColor.needsUpdate = true;
+            // Update instance matrices and colors for this mesh
+            instancedMesh.instanceMatrix.needsUpdate = true;
+            instancedMesh.instanceColor.needsUpdate = true;
+        });
     }
 }
 
