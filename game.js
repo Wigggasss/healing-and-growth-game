@@ -1022,6 +1022,11 @@ class GrassSystem {
                     this.createGrass();
                 } catch (error) {
                     console.error('Error processing grass model:', error);
+                    console.error('Error details:', {
+                        message: error.message,
+                        stack: error.stack,
+                        type: error.constructor.name
+                    });
                     this.createFallbackGrass();
                 }
             },
@@ -1044,8 +1049,9 @@ class GrassSystem {
 
     createFallbackGrass() {
         console.log('Creating fallback grass geometry');
-        // Create a simple grass blade geometry as fallback
-        const grassGeometry = new THREE.CylinderGeometry(0.05, 0.05, 0.5, 8);
+        
+        // Create a more natural grass blade geometry
+        const grassGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.8, 8);
         const grassMaterial = new THREE.MeshStandardMaterial({
             color: 0x3a7e4f,
             roughness: 0.8,
@@ -1054,29 +1060,14 @@ class GrassSystem {
             emissiveIntensity: 0.2
         });
         
-        const grassBlade = new THREE.Mesh(grassGeometry, grassMaterial);
-        this.grassModel = new THREE.Group();
-        this.grassModel.add(grassBlade);
-        
-        this.createGrass();
-    }
-
-    createGrass() {
-        if (!this.grassModel) {
-            console.error('Grass model not loaded');
-            return;
-        }
-
-        console.log('Creating grass with model:', this.grassModel);
-
         // Create instanced mesh for better performance
         this.grassMesh = new THREE.InstancedMesh(
-            this.grassModel.children[0].geometry,
-            this.grassModel.children[0].material,
+            grassGeometry,
+            grassMaterial,
             this.grassCount
         );
 
-        // Create grass instances with more natural distribution
+        // Create grass instances with natural distribution
         const matrix = new THREE.Matrix4();
         const color = new THREE.Color();
         const position = new THREE.Vector3();
@@ -1084,29 +1075,45 @@ class GrassSystem {
         const quaternion = new THREE.Quaternion();
         const scale = new THREE.Vector3();
 
-        for (let i = 0; i < this.grassCount; i++) {
-            // Random position with better distribution
-            position.x = Math.random() * 80 - 40;
-            position.z = Math.random() * 80 - 40;
-            position.y = 0.1; // Slightly above ground to prevent z-fighting
+        // Create clusters of grass for more natural distribution
+        const clusterCount = Math.floor(this.grassCount / 100); // 100 blades per cluster
+        for (let cluster = 0; cluster < clusterCount; cluster++) {
+            // Center of the cluster
+            const clusterX = Math.random() * 160 - 80;
+            const clusterZ = Math.random() * 160 - 80;
+            
+            // Create 100 blades in this cluster
+            for (let i = 0; i < 100; i++) {
+                const index = cluster * 100 + i;
+                if (index >= this.grassCount) break;
 
-            // More natural random rotation
-            rotation.x = Math.random() * 0.3 - 0.15; // Slight tilt forward/backward
-            rotation.y = Math.random() * Math.PI * 2; // Random rotation around Y axis
-            rotation.z = Math.random() * 0.3 - 0.15; // Slight tilt left/right
+                // Random position within cluster radius
+                const angle = Math.random() * Math.PI * 2;
+                const radius = Math.random() * 2; // 2 unit radius for each cluster
+                position.x = clusterX + Math.cos(angle) * radius;
+                position.z = clusterZ + Math.sin(angle) * radius;
+                position.y = 0.1; // Slightly above ground
 
-            // Increased scale for better visibility
-            scale.x = 2; // Wider grass blades
-            scale.y = 1 + Math.random() * 1.5; // Taller grass (1-2.5 units)
-            scale.z = 2; // Deeper grass blades
+                // Natural random rotation
+                rotation.x = Math.random() * 0.3 - 0.15; // Slight tilt forward/backward
+                rotation.y = Math.random() * Math.PI * 2; // Random rotation around Y axis
+                rotation.z = Math.random() * 0.3 - 0.15; // Slight tilt left/right
 
-            // Set instance matrix
-            matrix.compose(position, quaternion.setFromEuler(rotation), scale);
-            this.grassMesh.setMatrixAt(i, matrix);
+                // Varying heights for more natural look
+                const height = 0.6 + Math.random() * 0.4; // Height between 0.6 and 1.0
+                scale.set(1, height, 1);
 
-            // Brighter, more visible colors
-            color.setHSL(0.3 + Math.random() * 0.05, 0.8, 0.5 + Math.random() * 0.2);
-            this.grassMesh.setColorAt(i, color);
+                // Set instance matrix
+                matrix.compose(position, quaternion.setFromEuler(rotation), scale);
+                this.grassMesh.setMatrixAt(index, matrix);
+
+                // Slightly varying colors for more natural look
+                const hue = 0.3 + Math.random() * 0.05; // Green hue with slight variation
+                const saturation = 0.7 + Math.random() * 0.1; // Saturation variation
+                const lightness = 0.4 + Math.random() * 0.1; // Lightness variation
+                color.setHSL(hue, saturation, lightness);
+                this.grassMesh.setColorAt(index, color);
+            }
         }
 
         // Update instance matrices and colors
@@ -1115,7 +1122,7 @@ class GrassSystem {
 
         // Add grass to scene
         this.scene.add(this.grassMesh);
-        console.log('Grass mesh added to scene:', this.grassMesh);
+        console.log('Fallback grass mesh added to scene:', this.grassMesh);
     }
 
     update() {
@@ -1154,7 +1161,7 @@ class GrassSystem {
             if (distanceToPlayer < this.healingRadius) {
                 // Increase growth speed when player is meditating
                 const growthMultiplier = game.isMeditating ? 2 : 1;
-                scale.y = Math.min(2.5, scale.y + this.growthSpeed * growthMultiplier);
+                scale.y = Math.min(1.2, scale.y + this.growthSpeed * growthMultiplier);
 
                 // Add healing glow effect
                 const glowIntensity = (1 - distanceToPlayer / this.healingRadius) * 0.5;
