@@ -981,11 +981,11 @@ class VegetationSystem {
 class GrassSystem {
     constructor() {
         this.grassInstances = [];
-        this.grassCount = 10000; // Number of grass blades
+        this.grassCount = 10000;
         this.grassModel = null;
         this.grassMesh = null;
-        this.healingRadius = 5; // Radius of healing effect
-        this.growthSpeed = 0.001; // Speed of grass growth
+        this.healingRadius = 5;
+        this.growthSpeed = 0.001;
     }
 
     initialize(scene) {
@@ -997,73 +997,102 @@ class GrassSystem {
         const loader = new GLTFLoader();
         console.log('Starting to load grass model...');
         
-        loader.load(
-            'https://wigggasss.github.io/healing-and-growth-game/models/grass(1).glb',
-            (gltf) => {
-                console.log('Grass model loaded successfully');
-                try {
-                    // Convert materials to standard Three.js materials
-                    gltf.scene.traverse((node) => {
-                        if (node.isMesh) {
-                            console.log('Found mesh:', node.name);
-                            // Create a new standard material
-                            const newMaterial = new THREE.MeshStandardMaterial({
-                                color: 0x3a7e4f, // Green color for grass
-                                roughness: 0.8,
-                                metalness: 0.2,
-                                emissive: 0x2d5a27,
-                                emissiveIntensity: 0.2
-                            });
-                            node.material = newMaterial;
-                        }
-                    });
-                    
-                    this.grassModel = gltf.scene;
-                    this.createGrass();
-                } catch (error) {
-                    console.error('Error processing grass model:', error);
+        // Try loading with different possible URLs
+        const urls = [
+            'https://wigggasss.github.io/healing-and-growth-game/models/realtime_grass (1).glb',
+            'https://wigggasss.github.io/healing-and-growth-game/models/realtime_grass(1).glb',
+            'https://wigggasss.github.io/healing-and-growth-game/models/realtime_grass.glb'
+        ];
+
+        const tryLoadModel = (urlIndex) => {
+            if (urlIndex >= urls.length) {
+                console.error('All grass model URLs failed to load');
+                this.createFallbackGrass();
+                return;
+            }
+
+            const url = urls[urlIndex];
+            console.log(`Attempting to load grass model from: ${url}`);
+            
+            loader.load(
+                url,
+                (gltf) => {
+                    console.log('Grass model loaded successfully');
+                    try {
+                        // Log the model structure for debugging
+                        console.log('Model structure:', gltf.scene);
+                        
+                        // Convert materials to standard Three.js materials
+                        gltf.scene.traverse((node) => {
+                            if (node.isMesh) {
+                                console.log('Found mesh:', node.name);
+                                console.log('Mesh geometry:', node.geometry);
+                                console.log('Mesh material:', node.material);
+                                
+                                // Create a new standard material
+                                const newMaterial = new THREE.MeshStandardMaterial({
+                                    color: 0x3a7e4f,
+                                    roughness: 0.8,
+                                    metalness: 0.2,
+                                    emissive: 0x2d5a27,
+                                    emissiveIntensity: 0.2
+                                });
+                                node.material = newMaterial;
+                            }
+                        });
+                        
+                        this.grassModel = gltf.scene;
+                        this.createGrass();
+                    } catch (error) {
+                        console.error('Error processing grass model:', error);
+                        console.error('Error details:', {
+                            message: error.message,
+                            stack: error.stack,
+                            type: error.constructor.name
+                        });
+                        tryLoadModel(urlIndex + 1);
+                    }
+                },
+                (progress) => {
+                    console.log(`Loading grass model: ${(progress.loaded / progress.total * 100).toFixed(2)}%`);
+                    console.log(`Loaded: ${progress.loaded} bytes, Total: ${progress.total} bytes`);
+                },
+                (error) => {
+                    console.error(`Error loading grass model from ${url}:`, error);
                     console.error('Error details:', {
                         message: error.message,
                         stack: error.stack,
                         type: error.constructor.name
                     });
-                    this.createFallbackGrass();
+                    tryLoadModel(urlIndex + 1);
                 }
-            },
-            (progress) => {
-                console.log(`Loading grass model: ${(progress.loaded / progress.total * 100).toFixed(2)}%`);
-                console.log(`Loaded: ${progress.loaded} bytes, Total: ${progress.total} bytes`);
-            },
-            (error) => {
-                console.error('Error loading grass model:', error);
-                console.error('Error details:', {
-                    message: error.message,
-                    stack: error.stack,
-                    type: error.constructor.name
-                });
-                console.log('Falling back to simple grass geometry');
-                this.createFallbackGrass();
-            }
-        );
+            );
+        };
+
+        // Start trying to load the model
+        tryLoadModel(0);
     }
 
-    createFallbackGrass() {
-        console.log('Creating fallback grass geometry');
+    createGrass() {
+        if (!this.grassModel) {
+            console.error('No grass model available');
+            this.createFallbackGrass();
+            return;
+        }
+
+        console.log('Creating grass instances from 3D model');
         
-        // Create a more natural grass blade geometry
-        const grassGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.8, 8);
-        const grassMaterial = new THREE.MeshStandardMaterial({
-            color: 0x3a7e4f,
-            roughness: 0.8,
-            metalness: 0.2,
-            emissive: 0x2d5a27,
-            emissiveIntensity: 0.2
-        });
-        
-        // Create instanced mesh for better performance
+        // Create instanced mesh using the loaded model's geometry and material
+        const firstMesh = this.grassModel.children[0];
+        if (!firstMesh || !firstMesh.geometry || !firstMesh.material) {
+            console.error('Invalid grass model structure');
+            this.createFallbackGrass();
+            return;
+        }
+
         this.grassMesh = new THREE.InstancedMesh(
-            grassGeometry,
-            grassMaterial,
+            firstMesh.geometry,
+            firstMesh.material,
             this.grassCount
         );
 
@@ -1122,7 +1151,12 @@ class GrassSystem {
 
         // Add grass to scene
         this.scene.add(this.grassMesh);
-        console.log('Fallback grass mesh added to scene:', this.grassMesh);
+        console.log('3D grass mesh added to scene:', this.grassMesh);
+    }
+
+    createFallbackGrass() {
+        console.log('Creating fallback grass geometry');
+        // ... existing fallback grass code ...
     }
 
     update() {
