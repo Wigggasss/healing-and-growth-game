@@ -1086,109 +1086,25 @@ class GrassSystem {
         // Create a group to hold all grass instances
         this.grassGroup = new THREE.Group();
         
-        // Get all meshes from the model
-        const meshes = [];
-        this.grassModel.traverse((node) => {
-            if (node.isMesh) {
-                meshes.push(node);
-            }
-        });
-
-        if (meshes.length === 0) {
-            console.error('No meshes found in grass model');
-            this.createFallbackGrass();
-            return;
+        // Clone the model for each instance
+        for (let i = 0; i < this.grassCount; i++) {
+            const grassInstance = this.grassModel.clone();
+            
+            // Random position
+            const x = Math.random() * 160 - 80;
+            const z = Math.random() * 160 - 80;
+            grassInstance.position.set(x, 0.1, z);
+            
+            // Random rotation
+            grassInstance.rotation.y = Math.random() * Math.PI * 2;
+            
+            // Random scale for variety
+            const scale = 0.8 + Math.random() * 0.4;
+            grassInstance.scale.set(scale, scale, scale);
+            
+            this.grassGroup.add(grassInstance);
         }
-
-        // Create instanced meshes for each unique material
-        const materialGroups = new Map();
-        meshes.forEach(mesh => {
-            const materialKey = mesh.material.uuid;
-            if (!materialGroups.has(materialKey)) {
-                materialGroups.set(materialKey, {
-                    material: mesh.material,
-                    meshes: []
-                });
-            }
-            materialGroups.get(materialKey).meshes.push(mesh);
-        });
-
-        // Create instanced meshes for each material group
-        materialGroups.forEach((group, materialKey) => {
-            try {
-                // Create a combined geometry from all meshes with this material
-                const geometries = group.meshes.map(mesh => mesh.geometry);
-                const combinedGeometry = BufferGeometryUtils.mergeGeometries(geometries);
-                
-                // Create instanced mesh
-                const instancedMesh = new THREE.InstancedMesh(
-                    combinedGeometry,
-                    group.material,
-                    this.grassCount
-                );
-
-                // Create grass instances with natural distribution
-                const matrix = new THREE.Matrix4();
-                const color = new THREE.Color();
-                const position = new THREE.Vector3();
-                const rotation = new THREE.Euler();
-                const quaternion = new THREE.Quaternion();
-                const scale = new THREE.Vector3();
-
-                // Create clusters of grass for more natural distribution
-                const clusterCount = Math.floor(this.grassCount / 100); // 100 blades per cluster
-                for (let cluster = 0; cluster < clusterCount; cluster++) {
-                    // Center of the cluster
-                    const clusterX = Math.random() * 160 - 80;
-                    const clusterZ = Math.random() * 160 - 80;
-                    
-                    // Create 100 blades in this cluster
-                    for (let i = 0; i < 100; i++) {
-                        const index = cluster * 100 + i;
-                        if (index >= this.grassCount) break;
-
-                        // Random position within cluster radius
-                        const angle = Math.random() * Math.PI * 2;
-                        const radius = Math.random() * 2; // 2 unit radius for each cluster
-                        position.x = clusterX + Math.cos(angle) * radius;
-                        position.z = clusterZ + Math.sin(angle) * radius;
-                        position.y = 0.1; // Slightly above ground
-
-                        // Natural random rotation
-                        rotation.x = Math.random() * 0.3 - 0.15; // Slight tilt forward/backward
-                        rotation.y = Math.random() * Math.PI * 2; // Random rotation around Y axis
-                        rotation.z = Math.random() * 0.3 - 0.15; // Slight tilt left/right
-
-                        // Varying heights for more natural look
-                        const height = 0.6 + Math.random() * 0.4; // Height between 0.6 and 1.0
-                        scale.set(1, height, 1);
-
-                        // Set instance matrix
-                        matrix.compose(position, quaternion.setFromEuler(rotation), scale);
-                        instancedMesh.setMatrixAt(index, matrix);
-
-                        // Slightly varying colors for more natural look
-                        const hue = 0.3 + Math.random() * 0.05; // Green hue with slight variation
-                        const saturation = 0.7 + Math.random() * 0.1; // Saturation variation
-                        const lightness = 0.4 + Math.random() * 0.1; // Lightness variation
-                        color.setHSL(hue, saturation, lightness);
-                        instancedMesh.setColorAt(index, color);
-                    }
-                }
-
-                // Update instance matrices and colors
-                instancedMesh.instanceMatrix.needsUpdate = true;
-                instancedMesh.instanceColor.needsUpdate = true;
-
-                // Add to grass group
-                this.grassGroup.add(instancedMesh);
-            } catch (error) {
-                console.error('Error creating instanced mesh:', error);
-                this.createFallbackGrass();
-                return;
-            }
-        });
-
+        
         // Add grass group to scene
         this.scene.add(this.grassGroup);
         console.log('3D grass group added to scene:', this.grassGroup);
@@ -1196,63 +1112,69 @@ class GrassSystem {
 
     createFallbackGrass() {
         console.log('Creating fallback grass geometry');
-        // ... existing fallback grass code ...
+        // Create simple grass blades using basic geometry
+        const grassGeometry = new THREE.PlaneGeometry(0.1, 0.5);
+        const grassMaterial = new THREE.MeshStandardMaterial({
+            color: 0x3a7e4f,
+            roughness: 0.8,
+            metalness: 0.2,
+            emissive: 0x2d5a27,
+            emissiveIntensity: 0.2
+        });
+
+        this.grassGroup = new THREE.Group();
+        
+        for (let i = 0; i < this.grassCount; i++) {
+            const grassBlade = new THREE.Mesh(grassGeometry, grassMaterial);
+            
+            // Random position
+            const x = Math.random() * 160 - 80;
+            const z = Math.random() * 160 - 80;
+            grassBlade.position.set(x, 0.1, z);
+            
+            // Random rotation
+            grassBlade.rotation.y = Math.random() * Math.PI * 2;
+            
+            // Random scale for variety
+            const scale = 0.8 + Math.random() * 0.4;
+            grassBlade.scale.set(scale, scale, scale);
+            
+            this.grassGroup.add(grassBlade);
+        }
+        
+        this.scene.add(this.grassGroup);
     }
 
     update() {
         if (!this.grassGroup) return;
 
         const time = Date.now() * 0.001;
-        const matrix = new THREE.Matrix4();
-        const position = new THREE.Vector3();
-        const rotation = new THREE.Euler();
-        const quaternion = new THREE.Quaternion();
-        const scale = new THREE.Vector3();
-        const color = new THREE.Color();
-
+        
         // Get player position for healing effect
         const playerPos = game.player.position;
 
-        // Update each instanced mesh in the group
-        this.grassGroup.children.forEach(instancedMesh => {
-            // Update each grass blade
-            for (let i = 0; i < this.grassCount; i++) {
-                instancedMesh.getMatrixAt(i, matrix);
-                matrix.decompose(position, quaternion, scale);
+        // Update each grass instance
+        this.grassGroup.children.forEach(grassInstance => {
+            // Calculate distance to player
+            const distanceToPlayer = grassInstance.position.distanceTo(playerPos);
 
-                // Ensure grass stays above ground
-                position.y = Math.max(0.1, position.y);
+            // Add wind effect
+            grassInstance.rotation.x = Math.sin(time + grassInstance.position.x) * 0.1;
+            grassInstance.rotation.z = Math.cos(time + grassInstance.position.z) * 0.05;
 
-                // Calculate distance to player
-                const distanceToPlayer = position.distanceTo(playerPos);
+            // Growth effect based on player proximity and meditation
+            if (distanceToPlayer < this.healingRadius) {
+                // Increase growth speed when player is meditating
+                const growthMultiplier = game.isMeditating ? 2 : 1;
+                const currentScale = grassInstance.scale.y;
+                grassInstance.scale.y = Math.min(1.2, currentScale + this.growthSpeed * growthMultiplier);
 
-                // Add wind effect with more natural movement
-                rotation.setFromQuaternion(quaternion);
-                const windStrength = Math.sin(time + position.x) * 0.1;
-                rotation.x = windStrength;
-                rotation.z = Math.cos(time + position.z) * 0.05;
-                quaternion.setFromEuler(rotation);
-
-                // Growth effect based on player proximity and meditation
-                if (distanceToPlayer < this.healingRadius) {
-                    // Increase growth speed when player is meditating
-                    const growthMultiplier = game.isMeditating ? 2 : 1;
-                    scale.y = Math.min(1.2, scale.y + this.growthSpeed * growthMultiplier);
-
-                    // Add healing glow effect
-                    const glowIntensity = (1 - distanceToPlayer / this.healingRadius) * 0.5;
-                    color.setHSL(0.3, 0.8, 0.5 + glowIntensity);
-                    instancedMesh.setColorAt(i, color);
-                }
-
-                // Rebuild matrix
-                matrix.compose(position, quaternion, scale);
-                instancedMesh.setMatrixAt(i, matrix);
+                // Add healing glow effect
+                const glowIntensity = (1 - distanceToPlayer / this.healingRadius) * 0.5;
+                grassInstance.material.emissiveIntensity = 0.2 + glowIntensity;
+            } else {
+                grassInstance.material.emissiveIntensity = 0.2;
             }
-
-            // Update instance matrices and colors for this mesh
-            instancedMesh.instanceMatrix.needsUpdate = true;
-            instancedMesh.instanceColor.needsUpdate = true;
         });
     }
 }
@@ -1656,6 +1578,12 @@ class Game {
             this.renderer.shadowMap.enabled = true;
             this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
             document.body.appendChild(this.renderer.domElement);
+
+            // Initialize AI systems first
+            this.codeAI = new CodeMaintenanceAI();
+            this.gameAI = new GameAI();
+            this.codeAI.initialize();
+            this.gameAI.initialize(this.scene);
 
             // Initialize texture loader
             this.textureLoader = new THREE.TextureLoader();
@@ -2688,6 +2616,15 @@ class Game {
             if (this.grass && typeof this.grass.update === 'function') {
                 this.grass.update();
             }
+
+            // Update AI systems
+            if (this.codeAI && typeof this.codeAI.checkCodeHealth === 'function') {
+                this.codeAI.checkCodeHealth();
+            }
+            
+            if (this.gameAI && typeof this.gameAI.update === 'function') {
+                this.gameAI.update();
+            }
             
             // Energy management with proper checks
             if (!this.isMeditating) {
@@ -2708,11 +2645,6 @@ class Game {
             console.error('Error in animation loop:', error);
             // Optionally stop the animation loop if there's a critical error
             // this.isInitialized = false;
-        }
-
-        // Update AI systems
-        if (this.gameAI && typeof this.gameAI.update === 'function') {
-            this.gameAI.update();
         }
     }
 }
