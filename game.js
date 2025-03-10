@@ -1000,8 +1000,8 @@ class GrassSystem {
         // Try loading with different possible URLs
         const urls = [
             'https://wigggasss.github.io/healing-and-growth-game/models/realtime_grass (1).glb',
-            'https://wigggasss.github.io/healing-and-growth-game/models/realtime_grass(1).glb',
-            'https://wigggasss.github.io/healing-and-growth-game/models/realtime_grass.glb'
+            'models/realtime_grass (1).glb',
+            './models/realtime_grass (1).glb'
         ];
 
         const tryLoadModel = (urlIndex) => {
