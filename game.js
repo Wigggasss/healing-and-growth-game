@@ -513,6 +513,8 @@ class EffectSystem {
     constructor() {
         this.effects = [];
         this.particleSystems = [];
+        this.particlePool = [];
+        this.maxParticles = 100;
     }
 
     initialize(scene) {
@@ -521,34 +523,62 @@ class EffectSystem {
     }
 
     setupParticleSystems() {
-        // Create particle system for healing effects
-        this.healingParticles = new THREE.Group();
-        for (let i = 0; i < 20; i++) {
+        // Create particle pool
+        for (let i = 0; i < this.maxParticles; i++) {
             const particle = new THREE.Mesh(
                 new THREE.SphereGeometry(0.1, 8, 8),
                 new THREE.MeshBasicMaterial({ color: 0x00ff00 })
             );
-            this.healingParticles.add(particle);
+            particle.visible = false;
+            this.particlePool.push(particle);
+            this.scene.add(particle);
+        }
+
+        // Create healing particles group
+        this.healingParticles = new THREE.Group();
+        for (let i = 0; i < 10; i++) { // Reduced from 20
+            const particle = this.getParticleFromPool();
+            if (particle) {
+                particle.material.color.setHex(0x00ff00);
+                this.healingParticles.add(particle);
+            }
         }
         this.scene.add(this.healingParticles);
         this.healingParticles.visible = false;
 
-        // Create particle system for energy effects
+        // Create energy particles group
         this.energyParticles = new THREE.Group();
-        for (let i = 0; i < 20; i++) {
-            const particle = new THREE.Mesh(
-                new THREE.SphereGeometry(0.1, 8, 8),
-                new THREE.MeshBasicMaterial({ color: 0x00ffff })
-            );
-            this.energyParticles.add(particle);
+        for (let i = 0; i < 10; i++) { // Reduced from 20
+            const particle = this.getParticleFromPool();
+            if (particle) {
+                particle.material.color.setHex(0x00ffff);
+                this.energyParticles.add(particle);
+            }
         }
         this.scene.add(this.energyParticles);
         this.energyParticles.visible = false;
     }
 
+    getParticleFromPool() {
+        for (let particle of this.particlePool) {
+            if (!particle.visible) {
+                particle.visible = true;
+                return particle;
+            }
+        }
+        return null;
+    }
+
+    returnParticleToPool(particle) {
+        particle.visible = false;
+        particle.position.set(0, 0, 0);
+        particle.userData.velocity = new THREE.Vector3();
+    }
+
     showHealingEffect(position) {
         this.healingParticles.position.copy(position);
         this.healingParticles.visible = true;
+        
         this.healingParticles.children.forEach(particle => {
             particle.position.set(
                 Math.random() * 2 - 1,
@@ -564,12 +594,16 @@ class EffectSystem {
 
         setTimeout(() => {
             this.healingParticles.visible = false;
+            this.healingParticles.children.forEach(particle => {
+                this.returnParticleToPool(particle);
+            });
         }, 1000);
     }
 
     showEnergyEffect(position) {
         this.energyParticles.position.copy(position);
         this.energyParticles.visible = true;
+        
         this.energyParticles.children.forEach(particle => {
             particle.position.set(
                 Math.random() * 2 - 1,
@@ -585,28 +619,34 @@ class EffectSystem {
 
         setTimeout(() => {
             this.energyParticles.visible = false;
+            this.energyParticles.children.forEach(particle => {
+                this.returnParticleToPool(particle);
+            });
         }, 1000);
     }
 
     showLevelUpEffect(position) {
         const particles = new THREE.Group();
-        for (let i = 0; i < 30; i++) {
-            const particle = new THREE.Mesh(
-                new THREE.SphereGeometry(0.2, 8, 8),
-                new THREE.MeshBasicMaterial({ color: 0xffff00 })
-            );
-            particle.position.copy(position);
-            particle.userData.velocity = new THREE.Vector3(
-                Math.random() * 0.5 - 0.25,
-                Math.random() * 0.5,
-                Math.random() * 0.5 - 0.25
-            );
-            particles.add(particle);
+        for (let i = 0; i < 15; i++) { // Reduced from 30
+            const particle = this.getParticleFromPool();
+            if (particle) {
+                particle.material.color.setHex(0xffff00);
+                particle.position.copy(position);
+                particle.userData.velocity = new THREE.Vector3(
+                    Math.random() * 0.5 - 0.25,
+                    Math.random() * 0.5,
+                    Math.random() * 0.5 - 0.25
+                );
+                particles.add(particle);
+            }
         }
         this.scene.add(particles);
 
         setTimeout(() => {
             this.scene.remove(particles);
+            particles.children.forEach(particle => {
+                this.returnParticleToPool(particle);
+            });
         }, 2000);
     }
 
@@ -981,12 +1021,15 @@ class VegetationSystem {
 
 class GrassSystem {
     constructor() {
-        this.grassInstances = [];
-        this.grassCount = 10000;
+        this.grassCount = 5000; // Reduced from 10000
         this.grassModel = null;
         this.grassMesh = null;
         this.healingRadius = 5;
         this.growthSpeed = 0.001;
+        this.instancedMesh = null;
+        this.positions = [];
+        this.rotations = [];
+        this.scales = [];
     }
 
     initialize(scene) {
@@ -998,7 +1041,6 @@ class GrassSystem {
         const loader = new GLTFLoader();
         console.log('Starting to load grass model...');
         
-        // Try loading with different possible URLs
         const urls = [
             'https://wigggasss.github.io/healing-and-growth-game/models/realtime_grass (1).glb',
             'models/realtime_grass (1).glb',
@@ -1020,17 +1062,8 @@ class GrassSystem {
                 (gltf) => {
                     console.log('Grass model loaded successfully');
                     try {
-                        // Log the model structure for debugging
-                        console.log('Model structure:', gltf.scene);
-                        
-                        // Convert materials to standard Three.js materials
                         gltf.scene.traverse((node) => {
                             if (node.isMesh) {
-                                console.log('Found mesh:', node.name);
-                                console.log('Mesh geometry:', node.geometry);
-                                console.log('Mesh material:', node.material);
-                                
-                                // Create a new standard material
                                 const newMaterial = new THREE.MeshStandardMaterial({
                                     color: 0x3a7e4f,
                                     roughness: 0.8,
@@ -1039,38 +1072,25 @@ class GrassSystem {
                                     emissiveIntensity: 0.2
                                 });
                                 node.material = newMaterial;
+                                this.grassModel = node;
+                                this.createGrass();
                             }
                         });
-                        
-                        this.grassModel = gltf.scene;
-                        this.createGrass();
                     } catch (error) {
                         console.error('Error processing grass model:', error);
-                        console.error('Error details:', {
-                            message: error.message,
-                            stack: error.stack,
-                            type: error.constructor.name
-                        });
                         tryLoadModel(urlIndex + 1);
                     }
                 },
                 (progress) => {
                     console.log(`Loading grass model: ${(progress.loaded / progress.total * 100).toFixed(2)}%`);
-                    console.log(`Loaded: ${progress.loaded} bytes, Total: ${progress.total} bytes`);
                 },
                 (error) => {
                     console.error(`Error loading grass model from ${url}:`, error);
-                    console.error('Error details:', {
-                        message: error.message,
-                        stack: error.stack,
-                        type: error.constructor.name
-                    });
                     tryLoadModel(urlIndex + 1);
                 }
             );
         };
 
-        // Start trying to load the model
         tryLoadModel(0);
     }
 
@@ -1081,40 +1101,54 @@ class GrassSystem {
             return;
         }
 
-        console.log('Creating grass instances from 3D model');
+        console.log('Creating instanced grass');
         
-        // Create a group to hold all grass instances
-        this.grassGroup = new THREE.Group();
+        // Create instanced mesh
+        const geometry = this.grassModel.geometry;
+        const material = this.grassModel.material;
+        this.instancedMesh = new THREE.InstancedMesh(geometry, material, this.grassCount);
         
-        // Clone the model for each instance
+        // Create matrices for each instance
+        const matrix = new THREE.Matrix4();
+        const rotation = new THREE.Euler();
+        const quaternion = new THREE.Quaternion();
+        const scale = new THREE.Vector3();
+        
         for (let i = 0; i < this.grassCount; i++) {
-            const grassInstance = this.grassModel.clone();
-            
             // Random position
             const x = Math.random() * 160 - 80;
             const z = Math.random() * 160 - 80;
-            grassInstance.position.set(x, 0.1, z);
+            const y = 0.1;
             
             // Random rotation
-            grassInstance.rotation.y = Math.random() * Math.PI * 2;
+            rotation.y = Math.random() * Math.PI * 2;
+            quaternion.setFromEuler(rotation);
             
-            // Random scale for variety
-            const scale = 0.8 + Math.random() * 0.4;
-            grassInstance.scale.set(scale, scale, scale);
+            // Random scale
+            const scaleValue = 0.8 + Math.random() * 0.4;
+            scale.set(scaleValue, scaleValue, scaleValue);
             
-            this.grassGroup.add(grassInstance);
+            // Set matrix
+            matrix.compose(
+                new THREE.Vector3(x, y, z),
+                quaternion,
+                scale
+            );
+            this.instancedMesh.setMatrixAt(i, matrix);
+            
+            // Store instance data for updates
+            this.positions.push(new THREE.Vector3(x, y, z));
+            this.rotations.push(rotation.y);
+            this.scales.push(scaleValue);
         }
         
-        // Add grass group to scene
-        this.scene.add(this.grassGroup);
-        console.log('3D grass group added to scene:', this.grassGroup);
+        this.scene.add(this.instancedMesh);
     }
 
     createFallbackGrass() {
-        console.log('Creating fallback grass geometry');
-        // Create simple grass blades using basic geometry
-        const grassGeometry = new THREE.PlaneGeometry(0.1, 0.5);
-        const grassMaterial = new THREE.MeshStandardMaterial({
+        console.log('Creating fallback instanced grass');
+        const geometry = new THREE.PlaneGeometry(0.1, 0.5);
+        const material = new THREE.MeshStandardMaterial({
             color: 0x3a7e4f,
             roughness: 0.8,
             metalness: 0.2,
@@ -1122,60 +1156,78 @@ class GrassSystem {
             emissiveIntensity: 0.2
         });
 
-        this.grassGroup = new THREE.Group();
+        this.instancedMesh = new THREE.InstancedMesh(geometry, material, this.grassCount);
+        
+        const matrix = new THREE.Matrix4();
+        const rotation = new THREE.Euler();
+        const quaternion = new THREE.Quaternion();
+        const scale = new THREE.Vector3();
         
         for (let i = 0; i < this.grassCount; i++) {
-            const grassBlade = new THREE.Mesh(grassGeometry, grassMaterial);
-            
-            // Random position
             const x = Math.random() * 160 - 80;
             const z = Math.random() * 160 - 80;
-            grassBlade.position.set(x, 0.1, z);
+            const y = 0.1;
             
-            // Random rotation
-            grassBlade.rotation.y = Math.random() * Math.PI * 2;
+            rotation.y = Math.random() * Math.PI * 2;
+            quaternion.setFromEuler(rotation);
             
-            // Random scale for variety
-            const scale = 0.8 + Math.random() * 0.4;
-            grassBlade.scale.set(scale, scale, scale);
+            const scaleValue = 0.8 + Math.random() * 0.4;
+            scale.set(scaleValue, scaleValue, scaleValue);
             
-            this.grassGroup.add(grassBlade);
+            matrix.compose(
+                new THREE.Vector3(x, y, z),
+                quaternion,
+                scale
+            );
+            this.instancedMesh.setMatrixAt(i, matrix);
+            
+            this.positions.push(new THREE.Vector3(x, y, z));
+            this.rotations.push(rotation.y);
+            this.scales.push(scaleValue);
         }
         
-        this.scene.add(this.grassGroup);
+        this.scene.add(this.instancedMesh);
     }
 
     update() {
-        if (!this.grassGroup) return;
+        if (!this.instancedMesh) return;
 
         const time = Date.now() * 0.001;
-        
-        // Get player position for healing effect
         const playerPos = game.player.position;
-
-        // Update each grass instance
-        this.grassGroup.children.forEach(grassInstance => {
-            // Calculate distance to player
-            const distanceToPlayer = grassInstance.position.distanceTo(playerPos);
-
-            // Add wind effect
-            grassInstance.rotation.x = Math.sin(time + grassInstance.position.x) * 0.1;
-            grassInstance.rotation.z = Math.cos(time + grassInstance.position.z) * 0.05;
-
-            // Growth effect based on player proximity and meditation
+        const matrix = new THREE.Matrix4();
+        const rotation = new THREE.Euler();
+        const quaternion = new THREE.Quaternion();
+        const scale = new THREE.Vector3();
+        
+        // Update every 5th instance per frame for better performance
+        const updateInterval = 5;
+        const startIndex = Math.floor(time * 1000) % updateInterval;
+        
+        for (let i = startIndex; i < this.grassCount; i += updateInterval) {
+            const pos = this.positions[i];
+            const distanceToPlayer = pos.distanceTo(playerPos);
+            
+            // Wind effect
+            rotation.x = Math.sin(time + pos.x) * 0.1;
+            rotation.y = this.rotations[i];
+            rotation.z = Math.cos(time + pos.z) * 0.05;
+            
+            // Growth effect
+            let scaleValue = this.scales[i];
             if (distanceToPlayer < this.healingRadius) {
-                // Increase growth speed when player is meditating
                 const growthMultiplier = game.isMeditating ? 2 : 1;
-                const currentScale = grassInstance.scale.y;
-                grassInstance.scale.y = Math.min(1.2, currentScale + this.growthSpeed * growthMultiplier);
-
-                // Add healing glow effect
-                const glowIntensity = (1 - distanceToPlayer / this.healingRadius) * 0.5;
-                grassInstance.material.emissiveIntensity = 0.2 + glowIntensity;
-            } else {
-                grassInstance.material.emissiveIntensity = 0.2;
+                scaleValue = Math.min(1.2, scaleValue + this.growthSpeed * growthMultiplier);
+                this.scales[i] = scaleValue;
             }
-        });
+            
+            scale.set(scaleValue, scaleValue, scaleValue);
+            quaternion.setFromEuler(rotation);
+            
+            matrix.compose(pos, quaternion, scale);
+            this.instancedMesh.setMatrixAt(i, matrix);
+        }
+        
+        this.instancedMesh.instanceMatrix.needsUpdate = true;
     }
 }
 
