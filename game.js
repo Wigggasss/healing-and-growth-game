@@ -1250,6 +1250,348 @@ class GrassSystem {
     }
 }
 
+class CodeMaintenanceAI {
+    constructor() {
+        this.lastCheck = Date.now();
+        this.checkInterval = 60000; // Check every minute
+        this.optimizations = [];
+        this.issues = [];
+    }
+
+    initialize() {
+        console.log('Initializing Code Maintenance AI...');
+        this.startMonitoring();
+    }
+
+    startMonitoring() {
+        setInterval(() => {
+            this.checkCodeHealth();
+        }, this.checkInterval);
+    }
+
+    checkCodeHealth() {
+        console.log('Code Maintenance AI: Performing system check...');
+        
+        // Check for common issues
+        this.checkMemoryUsage();
+        this.checkPerformance();
+        this.checkErrorRates();
+        this.optimizeResources();
+        
+        // Log findings
+        this.logReport();
+    }
+
+    checkMemoryUsage() {
+        if (performance.memory) {
+            const memoryUsage = performance.memory.usedJSHeapSize / performance.memory.jsHeapSizeLimit;
+            if (memoryUsage > 0.8) {
+                this.issues.push({
+                    type: 'memory',
+                    severity: 'high',
+                    message: 'High memory usage detected'
+                });
+            }
+        }
+    }
+
+    checkPerformance() {
+        const fps = game.fps;
+        if (fps < 30) {
+            this.issues.push({
+                type: 'performance',
+                severity: 'medium',
+                message: 'Low FPS detected'
+            });
+        }
+    }
+
+    checkErrorRates() {
+        // Check for error patterns
+        const recentErrors = this.getRecentErrors();
+        if (recentErrors.length > 5) {
+            this.issues.push({
+                type: 'errors',
+                severity: 'high',
+                message: 'High error rate detected'
+            });
+        }
+    }
+
+    optimizeResources() {
+        // Optimize textures
+        if (game.textures) {
+            Object.values(game.textures).forEach(texture => {
+                if (texture.image && texture.image.width > 1024) {
+                    texture.image.width = 1024;
+                    texture.image.height = 1024;
+                    texture.needsUpdate = true;
+                }
+            });
+        }
+
+        // Optimize geometries
+        this.scene.traverse((object) => {
+            if (object.isMesh && object.geometry) {
+                if (object.geometry.attributes.position.count > 10000) {
+                    object.geometry.dispose();
+                    object.geometry = new THREE.BufferGeometry();
+                }
+            }
+        });
+    }
+
+    getRecentErrors() {
+        // Implementation to track recent errors
+        return [];
+    }
+
+    logReport() {
+        console.log('Code Maintenance AI Report:');
+        console.log('Issues found:', this.issues.length);
+        this.issues.forEach(issue => {
+            console.log(`- ${issue.type}: ${issue.message} (${issue.severity})`);
+        });
+        this.issues = []; // Clear issues after reporting
+    }
+}
+
+class GameAI {
+    constructor() {
+        this.npcs = [];
+        this.behaviors = new Map();
+        this.pathfinding = new PathfindingSystem();
+    }
+
+    initialize(scene) {
+        this.scene = scene;
+        this.pathfinding.initialize();
+        this.createAINPCs();
+    }
+
+    createAINPCs() {
+        // Create AI NPCs with different roles
+        const roles = ['healer', 'guide', 'teacher'];
+        
+        roles.forEach(role => {
+            const npc = this.createAINPC(role);
+            this.npcs.push(npc);
+            this.scene.add(npc);
+        });
+    }
+
+    createAINPC(role) {
+        const npc = new THREE.Group();
+        
+        // Create NPC body
+        const bodyGeometry = new THREE.CylinderGeometry(0.5, 0.5, 2, 8);
+        const bodyMaterial = new THREE.MeshStandardMaterial({ 
+            color: this.getRoleColor(role),
+            emissive: this.getRoleEmissive(role),
+            emissiveIntensity: 0.2
+        });
+        const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+        body.position.y = 1.5;
+        body.castShadow = true;
+        
+        // Create NPC head
+        const headGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+        const headMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0xffccaa,
+            emissive: this.getRoleEmissive(role),
+            emissiveIntensity: 0.1
+        });
+        const head = new THREE.Mesh(headGeometry, headMaterial);
+        head.position.y = 2.5;
+        head.castShadow = true;
+        
+        // Add role-specific aura
+        const auraGeometry = new THREE.SphereGeometry(1.2, 16, 16);
+        const auraMaterial = new THREE.MeshStandardMaterial({
+            color: this.getRoleColor(role),
+            transparent: true,
+            opacity: 0.2,
+            emissive: this.getRoleEmissive(role),
+            emissiveIntensity: 0.5
+        });
+        const aura = new THREE.Mesh(auraGeometry, auraMaterial);
+        aura.position.y = 2;
+        
+        npc.add(body);
+        npc.add(head);
+        npc.add(aura);
+        
+        // Set NPC properties
+        npc.role = role;
+        npc.position.set(
+            Math.random() * 160 - 80,
+            0,
+            Math.random() * 160 - 80
+        );
+        npc.targetPosition = npc.position.clone();
+        npc.state = 'idle';
+        npc.interactionRadius = 3;
+        
+        // Add AI behavior
+        this.behaviors.set(npc, this.createBehavior(role));
+        
+        return npc;
+    }
+
+    getRoleColor(role) {
+        const colors = {
+            healer: 0x00ff00,
+            guide: 0x0000ff,
+            teacher: 0xff00ff
+        };
+        return colors[role] || 0xffffff;
+    }
+
+    getRoleEmissive(role) {
+        const colors = {
+            healer: 0x00aa00,
+            guide: 0x0000aa,
+            teacher: 0xaa00aa
+        };
+        return colors[role] || 0xffffff;
+    }
+
+    createBehavior(role) {
+        const behaviors = {
+            healer: {
+                update: (npc) => {
+                    // Find nearest player or healing zone
+                    const playerPos = game.player.position;
+                    const distance = npc.position.distanceTo(playerPos);
+                    
+                    if (distance < npc.interactionRadius) {
+                        // Heal player if needed
+                        if (game.health < 100) {
+                            game.heal(0.5);
+                            this.showHealingEffect(npc);
+                        }
+                    }
+                    
+                    // Move towards player if too far
+                    if (distance > npc.interactionRadius * 2) {
+                        this.moveTowardsTarget(npc, playerPos);
+                    }
+                }
+            },
+            guide: {
+                update: (npc) => {
+                    // Guide player to important locations
+                    const playerPos = game.player.position;
+                    const distance = npc.position.distanceTo(playerPos);
+                    
+                    if (distance < npc.interactionRadius) {
+                        // Give guidance
+                        this.giveGuidance(npc);
+                    }
+                    
+                    // Move to next important location
+                    if (distance > npc.interactionRadius * 2) {
+                        this.moveTowardsTarget(npc, this.findNextImportantLocation());
+                    }
+                }
+            },
+            teacher: {
+                update: (npc) => {
+                    // Teach player about game mechanics
+                    const playerPos = game.player.position;
+                    const distance = npc.position.distanceTo(playerPos);
+                    
+                    if (distance < npc.interactionRadius) {
+                        // Share wisdom
+                        this.shareWisdom(npc);
+                    }
+                    
+                    // Move between meditation spots
+                    if (distance > npc.interactionRadius * 2) {
+                        this.moveTowardsTarget(npc, this.findNearestMeditationSpot());
+                    }
+                }
+            }
+        };
+        
+        return behaviors[role] || behaviors.guide;
+    }
+
+    moveTowardsTarget(npc, target) {
+        const direction = target.clone().sub(npc.position).normalize();
+        npc.position.add(direction.multiplyScalar(0.05));
+        npc.rotation.y = Math.atan2(direction.x, direction.z);
+    }
+
+    showHealingEffect(npc) {
+        const particles = new THREE.Group();
+        for (let i = 0; i < 10; i++) {
+            const particle = new THREE.Mesh(
+                new THREE.SphereGeometry(0.1, 8, 8),
+                new THREE.MeshBasicMaterial({ color: 0x00ff00 })
+            );
+            particle.position.copy(npc.position);
+            particle.position.y += Math.random() * 2;
+            particle.userData.velocity = new THREE.Vector3(
+                Math.random() * 0.1 - 0.05,
+                Math.random() * 0.2,
+                Math.random() * 0.1 - 0.05
+            );
+            particles.add(particle);
+        }
+        this.scene.add(particles);
+        
+        setTimeout(() => {
+            this.scene.remove(particles);
+        }, 1000);
+    }
+
+    giveGuidance(npc) {
+        // Implement guidance logic
+        console.log(`${npc.role} NPC: Offering guidance...`);
+    }
+
+    shareWisdom(npc) {
+        // Implement wisdom sharing logic
+        console.log(`${npc.role} NPC: Sharing wisdom...`);
+    }
+
+    findNextImportantLocation() {
+        // Find next important location to guide player to
+        return new THREE.Vector3(
+            Math.random() * 160 - 80,
+            0,
+            Math.random() * 160 - 80
+        );
+    }
+
+    findNearestMeditationSpot() {
+        // Find nearest meditation spot
+        let nearest = null;
+        let minDistance = Infinity;
+        
+        game.meditationSpots.forEach(spot => {
+            const distance = spot.position.distanceTo(game.player.position);
+            if (distance < minDistance) {
+                minDistance = distance;
+                nearest = spot.position;
+            }
+        });
+        
+        return nearest || new THREE.Vector3(0, 0, 0);
+    }
+
+    update() {
+        // Update all AI NPCs
+        this.npcs.forEach(npc => {
+            const behavior = this.behaviors.get(npc);
+            if (behavior && behavior.update) {
+                behavior.update(npc);
+            }
+        });
+    }
+}
+
 // Game class definition
 class Game {
     constructor() {
@@ -1526,6 +1868,14 @@ class Game {
         } catch (error) {
             console.error('Error initializing game systems:', error);
             throw error;
+        }
+
+        // Initialize AI systems
+        try {
+            this.codeAI = new CodeMaintenanceAI();
+            this.gameAI = new GameAI();
+        } catch (error) {
+            console.error('Error initializing AI systems:', error);
         }
     }
 
@@ -2351,6 +2701,11 @@ class Game {
             console.error('Error in animation loop:', error);
             // Optionally stop the animation loop if there's a critical error
             // this.isInitialized = false;
+        }
+
+        // Update AI systems
+        if (this.gameAI && typeof this.gameAI.update === 'function') {
+            this.gameAI.update();
         }
     }
 }
